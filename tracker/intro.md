@@ -1,4 +1,4 @@
-# Realtime Storms
+<h1 style="font-size:24px">Storm Tracker</h1>
 
 ## Current Conditions
 
