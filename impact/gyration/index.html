@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobility Impact Charts - All</title>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <link rel="icon" type="image/x-icon" href="../img/logo/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css" media="screen">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="../css/stylesheet.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="../css/github-light.css" media="screen">
+
+  <style>
+    tr:nth-child(odd) {background: #eee}
+  </style>
+
+</head>
+<body>
+<section class="main-content topnavbar">
+    <a href="/"><img src="../img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="../">Overview</a> | 
+    <a href="../charts">Storm Stats</a> | 
+    <a href="../cities.html">City Boundaries</a> | 
+    <a href="../process.html">Data Processing</a> | 
+    <a href="../charts.html">Impact Charts</a> |
+    <a href="../refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+<section style="padding-left:30px">
+
+  <h2>Storm Mobility - Radius of Gyration</h2>
+
+
+
+  <div style="clear:both; font-size: 16px; margin-bottom:10px">
+  The city-scale mobility study uses a city boundary radius ranging from 6 to 50 km. 
+  </div>
+
+</section>
+
+
+  <!--
+  D3 - CSV to HTML table - Includes array to html and circle sample
+  http://bl.ocks.org/ndarville/7075823
+  http://christopheviau.com/d3_tutorial/
+  -->
+
+  <div style="margin-left:30px;padding-right:30px;float:left">
+    <div class="eTable" id="d3div"></div>
+    <div style="font-size: 9px">
+    Download <a href="../charts/data/all_summary.csv">CSV File</a> | 
+    The csv file displayed above is embedded using a <a href="http://bl.ocks.org/ndarville/7075823">D3.js CSV to HTML table</a>. 
+    <!--
+    &nbsp;<a href="https://mobileearth.github.com/tweetdata/sql/all_summary.md">SQL Query (private)</a>
+    -->
+    </div>
+  </div>
+
+  <!-- For D3 Embedded CSV Sheet -->
+  <style>
+      table {
+          border-collapse: collapse;
+          border: 2px black solid;
+          font: 12px sans-serif;
+          min-height: 10px;
+      }
+      td {
+          border: 1px black solid;
+          padding: 5px;
+          white-space: nowrap;
+      }
+  </style>
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+      d3.text("../charts/data/all_gyration_compared.csv", function(data) {
+          var parsedCSV = d3.csv.parseRows(data);
+
+          var container = d3.select("#d3div")
+              .append("table")
+
+              .selectAll("tr")
+                  .data(parsedCSV).enter()
+                  .append("tr")
+
+              .selectAll("td")
+                  .data(function(d) { return d; }).enter()
+                  .append("td")
+                  .text(function(d) { return d; });
+        });
+    </script>
+    <!-- End D3 Embedded CSV Sheet -->
+
+
+
+<section style="padding-left:30px">
+
+<!--
+Three days before each storm are three_day_set -1, 
+the storm and the next 2 days are three_day_set 0, 
+days 3 to 5 after are three_day_set 1, 
+days 6 to 8 are three_day_set 2 etc. 
+-->
+
+  <div style="min-width:1480px;" comment="Prevents wrapping">
+        <div style="float:left">
+            <h3>3 Day Segments. 0 indicates day of impact plus next two days.</h3>
+
+            <div style="float:left">
+                <div style="margin-left:50px;margin-bottom:20px">2 or more locations</div>
+                <img src="../seaborn/img/gyration/3day/radius-gyration-3day-2posts.png" style="max-width:900px">
+            </div>
+            <div style="float:left">
+                <div style="margin-left:50px;margin-bottom:20px">3 or more locations</div>
+                <img src="../seaborn/img/gyration/3day/radius-gyration-3day-3posts.png" style="max-width:900px">
+            </div>
+            <div style="float:left">
+                <div style="margin-left:50px;margin-bottom:20px">5 or more locations</div>
+                <img src="../seaborn/img/gyration/3day/radius-gyration-3day-5posts.png" style="max-width:900px">
+            </div>
+        </div>
+        <div style="float:left">
+            <h3>&nbsp;</h3>
+
+            <div style="float:left">
+                <div style="margin-left:50px;margin-bottom:20px">2 or more locations. 1 day segments.</div>
+                <img src="../seaborn/img/gyration/1day/radius-gyration-1day-2posts-1columns.png" style="max-width:900px">
+            </div>
+        </div>
+    </div>
+
+    <div style="clear:both"></div>
+    <a name="gyration_1day_spans"></a>
+
+    <div style="min-width:1200px;" comment="Prevents wrapping"><br>
+        <h3>1 Day Spans. Comparison of 2 or 3 movement minimum per day.</h3>
+
+        <div style="float:left">
+            <div style="margin-left:50px;margin-bottom:20px">2 or more movements</div>
+            <img src="../seaborn/img/gyration/1day/radius-gyration-1day-2posts-1columns.png" style="max-width:900px">
+        </div>
+        <div style="float:left">
+            <div style="margin-left:50px;margin-bottom:20px">3 or more movements</div>
+            <img src="../seaborn/img/gyration/1day/radius-gyration-1day-3posts-1columns.png" style="max-width:900px">
+        </div>
+    </div>
+
+    <div style="clear:both"></div>
+
+
+    <br>
+    <a href="../charts.html">Impact Charts</a>
+    <br><br>
+
+</section>
+
+</body>
+</html>

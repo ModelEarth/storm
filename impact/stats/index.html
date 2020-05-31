@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Mobility Impact Charts - Cities</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+  </head>
+  <body>
+<!--
+    <section class="page-header">
+      <h1 class="project-name">Mobility Impact Charts</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.gatech.edu/lheyns3/TW-Charts" class="btn">View on GitHub</a>
+    </section>
+-->
+
+    <section class="main-content">
+
+      <a href="index.html">Overview</a> | 
+      <a href="cities.html">Identify Data</a> | 
+      <a href="process.html">Methodology</a> | 
+      <a href="charts.html">Impact Charts</a>
+
+
+      <!--
+      # fit a discrete power law to data using displ constructor
+      # m_pl = displ$new(moby)
+      # To infer model parameters, estimate the lower threshold
+      # est = estimate_xmin(m_pl)
+      # m_pl$setXmin(est)
+
+
+      Also (more verbose)
+      https://rdrr.io/cran/poweRlaw/src/inst/doc/b_powerlaw_examples.R
+      -->
+      <h1>Overview</h1>
+
+      <h3>Storms (private repos)</h3>
+
+
+<!--
+2017-08-31.csv - Harvey
+2017-09-30.csv - Maria, Irma
+2017-11-13.csv - Lan
+2018-08-31.csv - Florence
+-->
+
+<a href="https://github.gatech.edu/lheyns3/TW-2013-Philippines-Haiyan">Haiyan (2013-11)</a> - 2<br>
+<a href="https://github.gatech.edu/lheyns3/TW-2014-Philippines-Rammasun">Rammasun (2014-07)</a> - 2<br>
+<a href="https://github.gatech.edu/lheyns3/TW-2014-Philippines-Rammasun">Kalmaegi (2014-09)</a><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2014-Japan-Phanfone">Phanfone (2014-10)</a><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2016-09-Meranti">Meranti (2016-09)</a><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2016-10-Matthew">Matthew (2016-10)</a><br><!--We are missing: statuses_2016103_14_copy, statuses_2016103_15_copy - Yan was at gatech  
+Failed at statuses_2016108_8_copy.p  missing through part of 12. 15 to 26 also missing.
+
+Vardah (2016-12) - Might switch to coast of India.  
+-->
+<!--
+[Mujigae (2015-09-30 and 2015-10)](https://github.gatech.edu/lheyns3/TW-2015-10-Mujigae) - Not Used - Not urban so not enough Tweets.  
+Nepartak (2016-08) - Taiwan Landfall July 8, 2016 - Missing July 1-12 
+Debbie (2017-03)   https://github.gatech.edu/lheyns3/TW-2017-03-Debbie
+--> 
+<a href="https://github.gatech.edu/lheyns3/TW-2017-08-Harvey">Harvey (2017-08)</a><br><!-- Received missing 2017-08-31 data from Edgar. Might not be limited to Chel's study area rect. -->
+<a href="https://github.gatech.edu/lheyns3/TW-2017-Irma-Maria">Irma (2017-09)</a><!-- Received missing 2017-09-30 data from Edgar --><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2017-Irma-Maria">Maria (2017-09)</a><!-- Received missing 2017-09-30 data from Edgar  --><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2017-10-Lan">Lan (2017-10)</a><!-- Received missing 2017-11-13 data from Edgar --><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2018-09-Mangkhut">Mangkhut (2018-09)</a><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2018-09-Florence">Florence (2018-09)</a> - 0<!-- - Received missing Aug 31 data from Edgar --><br>
+<a href="https://github.gatech.edu/lheyns3/TW-2018-10-Michael">Michael (2018-10)</a><br>
+
+
+    </section>
+
+
+      <!--
+      D3 - CSV to HTML table - Includes array to html and circle sample
+      http://bl.ocks.org/ndarville/7075823
+      http://christopheviau.com/d3_tutorial/
+      -->
+
+      <div style="margin-left:30px;margin-right:30px;">
+        <div class="eTable" id="d3div"></div>
+        <div style="font-size: 9px">
+        Download <a href="charts/Impact-Combined.csv">CSV File</a> | 
+        The csv file displayed above is embedded using a <a href="http://bl.ocks.org/ndarville/7075823">D3.js CSV to HTML table</a>
+        </div><br><br>
+
+
+        
+
+
+
+
+      </div>
+
+      <!-- For D3 Embedded CSV Sheet -->
+      <style>
+          table {
+              border-collapse: collapse;
+              border: 2px black solid;
+              font: 12px sans-serif;
+              min-height: 10px;
+          }
+          td {
+              border: 1px black solid;
+              padding: 5px;
+          }
+      </style>
+      <script src="https://d3js.org/d3.v3.min.js"></script>
+      <script type="text/javascript" charset="utf-8">
+          d3.text("../charts/Impact-Combined.csv", function(data) {
+              var parsedCSV = d3.csv.parseRows(data);
+
+              var container = d3.select("#d3div")
+                  .append("table")
+
+                  .selectAll("tr")
+                      .data(parsedCSV).enter()
+                      .append("tr")
+
+                  .selectAll("td")
+                      .data(function(d) { return d; }).enter()
+                      .append("td")
+                      .text(function(d) { return d; });
+            });
+        </script>
+        <br>
+
+  </body>
+</html>

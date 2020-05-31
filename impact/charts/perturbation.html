@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <title>Mobility Impact Charts - Purterbation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../css/github-light.css" media="screen">
+  </head>
+  <body>
+
+<section class="main-content topnavbar">
+    <a href="/"><img src="../img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="../">Overview</a> | 
+    <a href="../charts">Storm Stats</a> | 
+    <a href="../cities.html">City Boundaries</a> | 
+    <a href="../process.html">Data Processing</a> | 
+    <a href="../charts.html">Impact Charts</a> |
+    <a href="../refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+
+<!--
+-- Produces values more like purturbation y value by using change in lat and lon.
+SELECT 
+(latitude - prior_latitude)::numeric(20,5) latChange, 
+(longitude - prior_longitude)::numeric(20,5) lonChange, 
+SQRT(POWER((latitude - prior_latitude),2) + POWER((longitude - prior_longitude),2))::numeric(20,5) AS distance 
+from matthew where displacement is not null limit 10
+-->
+
+<section class="main-content">
+<h2>Perturbation</h2>
+
+The change in the distributions of displacements.<br><br>
+
+<img src="../ryan/Figure1A.jpg" class="figure"><br>
+
+"We calculated the probability distribution for both the Impact Day (Dp) and a Normal Day (Ds), and let dE = [dE (1), dE (2),…, dE (dmax)] be Euclidean distance between the two distributions."<br><br>
+
+Yan 2017 states: "displacements of different trip distances... were perturbed significantly" so we might assume Wang 2014 is using the sum of displacement distance within each of the 6 trip distance segments. Yan 2017 also states that Radius of Gyration values were perturbed significantly.<br><br>
+
+
+<!-- Source: Statistics By Jim. http://statisticsbyjim.com/basics/probability-distributions/ -->
+
+<!--
+<h3>About probability distributions</h3>
+
+p(x) = the likelihood that random variable takes a specific value of x.<br><br>
+
+The sum of all probabilities for all possible values must equal 1. Furthermore, the probability for a particular value or range of values must be between 0 and 1.<br><br>
+
+Discrete probability distributions (for discrete variables) - aka probability mass functions<br>
+Probability density functions (PDFs) (for continuous variables)<br><br>
+-->
+
+<!--
+My idea:
+What percentile does daily displacement fall into?  - Based on percent below you. (0 to 1)
+
+x value is distance (in lat/lon coords)
+
+
+
+Pearson correlation coefficient formula
+https://www.youtube.com/watch?v=2SCg8Kuh0tE
+-->
+
+
+<h3>Comparing Distributions</h3>
+
+    <b>Comparing two Probability Density Functions (PDFs) using Kullback-Leibler divergence</b></br>
+    https://stats.stackexchange.com/questions/245526/comparing-two-pdfs-using-kullback-leibler-divergence<br><br>
+
+    <!--
+    Making sense of the Kullback–Leibler (KL) Divergence
+    https://medium.com/@cotra.marko/making-sense-of-the-kullback-leibler-kl-divergence-b0d57ee10e0a
+    -->
+    
+    <b>Difference between two signals</b><br>
+    https://dsp.stackexchange.com/questions/14306/percentage-difference-between-two-signals<br><br>
+
+    <b>Display the difference between two lines</b><br>
+    https://stackoverflow.com/questions/49487952/how-to-plot-the-difference-of-two-distributions-in-a-seaborn<br><br>
+
+    <b>Calculating KL Divergence in Python</b> (single value)<br>
+    https://datascience.stackexchange.com/questions/9262/calculating-kl-divergence-in-python<br><br>
+
+    <b>Mathworks matches the original 2014 chart style</b><br>
+    https://blogs.mathworks.com/pick/2010/06/11/distribution-plot/<br><br>
+    
+    <b>Includes 3-Day segment chart</b><br>
+    https://www.mathworks.com/help/stats/boxplot.html
+    <br><br>
+
+    <a href="../charts.html">View Charts</a>
+    <br><br>
+<!--
+(Charts 2 and 3 had there numbers flipped, so it's possible the instructions above apply to a different chart.)
+-->
+
+    <!-- See SQL in: TW perturbation-chart.txt -->
+
+
+    <!--
+
+        1. Get the impact displacement total for users on the day of impact.<br>
+
+    2. Join to the average displacement of their 5-day norm displacement steps.<br>
+
+    3. Return the change between their impact and norm displacement totals.<br><br>
+
+    Explore data with Pandas:<br>
+    https://www.oreilly.com/learning/exploring-data-with-pandas<br><br>
+    -->
+
+
+    <!--
+    Not used
+    Add probability distribution values to daily sum of user's steps. (Seems wrong, no need to compare the user's percentage rank to other users)
+
+    https://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
+    -->
+    
+    <!--
+        <h3>Displacement Distribution</h3>
+
+    
+        The following is the Displacement Distribution for Hurricane Sandy's impact on New York.<br>
+        Day 1 is 24 hours starting at 4pm on Oct. 29, 2012 (the day of impact).<br><br>
+        <img src="ryan/sandy/S2-Displacement-Distribution.png" style="max-width:400px"><br><br>
+    -->
+
+    
+
+    <footer class="site-footer">
+      <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">TW-Charts</a> maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
+
+      <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+    </footer>
+
+    </section>
+
+  
+  </body>
+</html>

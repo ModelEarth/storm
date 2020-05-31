@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Mobility Impact Charts - Cities</title>
+    <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+    <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+  integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+  crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+  integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+  crossorigin=""></script>
+
+  
+</head>
+<body>
+
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+    <section class="main-content" style="display:none">
+
+      <h1>Identify Data</h1>
+
+      To reproduce and add to the 2013-2014 <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> impact charts,<br>
+      we have several factors to determine:<br><br>
+
+      A. How is the city footprint defined?<br>
+      B. Are travel steps that originate outside the city included?<br>
+      C. What are the boundaries for steps starting/ending outside the city?<br>
+
+
+      <h3>A. Determine radius matching each urban area</h3>
+
+      <ol>
+      <li>Select the latitude and longitude returned by a Google search of the city, state and country following by "latitude and longitude".</li>
+
+      <li>Adjust the radius to create a circle that surrounds the city borders displayed on a Google Map.</li>
+
+      <li>Round up to an integer that surrounds the city.</li>
+
+      <li>Set the maximum at 50km to adjust for cities like Tokoyo  
+      for which Google assigns a center point in the downtown area, rather than the center of the bounded area.</li>
+
+      <li>When two city circles overlap due to offset center point, shift the center point. (See: Manila and Antipolo below.)</li>
+
+      <li>Enter the integer value in the <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> 
+      Google Sheet to set storm impact analysis parameters for import into Postgresql.</li>
+      </ol>
+
+      <h3>B. Are travel steps that originate outside the city included?</h3>
+
+      Based on the length of the long travel steps in the original study, we can assume that a large surrounding area needs to be included.<br><br>
+      
+      Since steps leaving the city area were included, we have also included steps that originated outside the city, such as those of 
+      commuters traveling into the city.<br><br>
+
+      The radius of gyration calculation includes all Twitter posts made by each individual for each day they enter the city. 
+      This include posts made prior to the entering the city, even if the user did not move between each prior post.
+      <br>
+
+      <h3>C. What are the boundaries for the area outside the city?</h3>
+
+      We used the entire country in a bounding rectangle as the external boundary for midsize countries. 
+      For larger countries, like the United States and China, 
+      we used a region of the country within a bounding rectangle.<br><br>
+
+      Country of Philippines<br>
+      Country of Japan<br>
+      Southeast USA and Caribbean<br>
+      Southeast China<br><br>
+
+      Country Bounding Boxes were provided by the following <a href="https://gist.github.com/graydon/11198540">country bounding box coordinates</a>.<br><br>
+
+      These boundaries allow us to bin (crop) the long distance travel steps to a manageable level for our pre-processing queries.  
+      <!--
+      For example, running a postgresql query on 20 million Twitter records in Japan for Sept-Oct 2014 took over 1 week. 
+      (This time might be reduced by running a postgresql vacuum first. Avoid a Full vacuum since it blocks queries on all tables.)--><br><br>
+
+      We considered simply using a 50km radius for all cities, however the original 2013-2014 study contained two cities within 17km (Manila and Antipolo).
+      <hr>
+
+</section>
+
+
+
+<section class="main-content">
+
+      <h2>City Boundaries</h2>
+
+      Each city boundary is centered on the lat/lon provided by a Google search.<br><br>
+
+
+      <b>Manila, Philippines - 20 km radius surrounding lat/lon 14.5995, 120.9842 - Rammasan 40 mph</b><br>
+
+      <!--
+      <b>Antipolo, Philippines - 15 km radius surrounding lat/lon 14.6255, 121.1789 - Rammasan 115mph</b><br>
+      -->
+
+      
+      
+
+
+      <div style="font-size:11pt">
+
+      Ninoy Aquino International Airport, PH - 40 mph wind July 16, 2014 (<a href="https://www.wunderground.com/history/weekly/ph/para%C3%B1aque/RPLL/date/2014-7-16">wunderground</a>)<br>
+
+      <!--
+      Typhoon Butchoy reached 121 mph (195 kph) on <a href="https://reliefweb.int/sites/reliefweb.int/files/resources/Sitrep_No_05_re_Preparedness_Measures_and_Effects_of_Typhoon_BUTCHOY_%28NEPARTAK%29_as_of_09JULY2016_1800H.pdf">July 6, 2014</a>
+      -->
+      Rammasun prompted more than 400,000 people to evacuate their homes.
+      (<a href="https://earthobservatory.nasa.gov/images/84027/typhoon-rammasun-drenches-philippines">earthobservatory.nasa.gov</a>)
+
+      <br><br>
+
+      </div>
+
+      <div id="mapid10"></div><br>
+      <style>
+      #mapid10 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid10').setView([14.5995, 120.9842], 10);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([14.5995, 120.9842], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 20000 /* initially 6000 */
+        }).addTo(mymap);
+
+        // Place rectangle around circle.
+        //var rectangle = new L.Rectangle(circle.getBounds()).addTo(mymap);
+
+        // 14.6255, 121.1245
+        /*
+        var circle = L.circle([14.6255, 121.1789], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 15000
+        }).addTo(mymap);
+        */
+
+        // Clicking sends the click location and other details to the console.
+        /*
+        var rectangle = new L.Rectangle(circle.getBounds()).on('click', function (e) {
+            // There event is event object
+            // there e.type === 'click'
+            // there e.lanlng === L.LatLng on map
+            // there e.target.getLatLngs() - your rectangle coordinates
+            // but e.target !== rect
+            console.info(e);
+            //alert(e.target.getLatLngs());
+        }).addTo(mymap);
+        */
+
+      </script>
+      <!--<img src="city/map/antipolo.jpg" /><br><br>-->
+
+
+      <b>Tacloban, Philippines - 11 km radius surrounding lat/lon 11.2543, 124.9617 - Haiyan 184 mph</b><br>
+
+      <!--
+      <div id="mapid"></div><br>
+      <style>
+      #mapid { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid').setView([11.2543, 124.9617], 11);
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        // You can replace mapbox.streets with: mapbox.satellite
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([11.2543, 124.9617], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 11000
+        }).addTo(mymap);
+      </script>
+
+      -->
+
+
+      <b>Cebu City, Philippines - 20 km radius surrounding lat/lon 10.3157 123.8854 - Haiyan 140 mph</b><br>
+
+      <div id="mapid6"></div><br>
+      <style>
+      #mapid6 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid6').setView([10.5, 123.8854], 8);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([10.3157, 123.8854], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 20000
+        }).addTo(mymap);
+        var circle = L.circle([11.2543, 124.9617], {
+            color: 'orange',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 11000
+        }).addTo(mymap);
+      </script>
+
+      <img src="city/map/tacloban.png" /><br><br><br>
+      <!--
+      <img src="city/map/cebu_city.png" /><br><br><br>
+      -->
+
+
+      <b>Panama City, Florida - 20 km radius surrounding lat/lon 30.1588 -85.6602</b><br>
+      [Too few norm tweets]<br>
+      <div id="mapid2"></div><br>
+      <style>
+      #mapid2 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid2').setView([30.1588, -85.6602], 10);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([30.1588, -85.6602], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 20000
+        }).addTo(mymap);
+      </script>
+
+      <img src="city/map/panama_city.png" /><br><br>
+
+
+      <b>Tampa & St. Petersburg, Florida - 40 km radius surrounding lat/lon 27.9506 -82.4572</b><br>
+      <div id="mapid7"></div><br>
+      <style>
+      #mapid7 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid7').setView([27.9506, -82.4572], 8);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([27.9506, -82.4572], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 40000
+        }).addTo(mymap);
+      </script>
+
+
+      <b>Willmington, NC - 20 km radius surrounding lat/lon 34.2104 -77.8868</b><br>
+      [Low local tweets compared to 10km and above tweets.]<br>
+      <div id="mapid8"></div><br>
+      <style>
+      #mapid8 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid8').setView([34.2104, -77.8868], 10);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([34.2104, -77.8868], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 20000
+        }).addTo(mymap);
+      </script>
+      <br>
+
+      <b>Hong Kong, China - 36 km radius surrounding lat/lon 22.3964 114.1095</b><br>
+
+      <div id="mapid3"></div><br>
+      <style>
+      #mapid3 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid3').setView([22.3964, 114.1095], 9);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([22.3964, 114.1095], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 36000
+        }).addTo(mymap);
+      </script>
+
+      <img src="city/map/hongkong.jpg" /><br><br><br>
+
+
+      <b>Houston, Texas - 42 km radius surrounding lat/lon 29.7604 -95.3698</b><br>
+
+      <div id="mapid4"></div><br>
+      <style>
+      #mapid4 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid4').setView([29.7604, -95.3698], 9);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([29.7604, -95.3698], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 42000
+        }).addTo(mymap);
+      </script>
+
+      <img src="city/map/houston.png" /><br><br><br>
+
+
+      <b>Tokyo, Japan - 50 km radius surrounding lat/lon 35.6895 139.6917</b><br>
+
+      <div id="mapid5"></div><br>
+      <style>
+      #mapid5 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid5').setView([35.6895, 139.6917], 8);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([35.6895, 139.6917], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 50000
+        }).addTo(mymap);
+      </script>
+
+      <img src="city/map/tokyo.png" /><br><br>
+
+      <b>Hamamatsu, Japan - 50 km radius surrounding lat/lon 34.7108 137.7261</b><br>
+      <div id="mapid12"></div><br>
+      <style>
+      #mapid12 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid12').setView([34.7108, 137.7261], 8);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([34.7108, 137.7261], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 50000
+        }).addTo(mymap);
+      </script>
+
+      <b>Shingū, Japan - 50 km radius surrounding lat/lon 33.7241 135.9924</b><br>
+      <div id="mapid11"></div><br>
+      <style>
+      #mapid11 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid11').setView([33.7241, 135.9924], 8);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([33.7241, 135.9924], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 50000
+        }).addTo(mymap);
+      </script>
+      <br>
+
+
+      <b>San Juan - 20 km radius surrounding lat/lon 18.4655, -66.1057</b><br>
+      <div id="mapid9"></div><br>
+      <style>
+      #mapid9 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid9').setView([18.4655, -66.1057], 10);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([18.4655, -66.1057], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 20000
+        }).addTo(mymap);
+      </script>
+      <br>
+
+      <b>Jacksonville, Florida - 42 km radius surrounding lat/lon 30.3322 -81.6557</b><br>
+      <div id="mapid13"></div><br>
+      <style>
+      #mapid13 { height: 380px; }
+      </style>
+      <script>
+        var mymap = L.map('mapid13').setView([30.3322, -81.6557], 9);
+        // You can replace mapbox.streets with: mapbox.satellite
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YXBvcnRhbCIsImEiOiJjam1tOXhpeGUwZ3IyM3BtbGIwbWV1NjIxIn0.K07Nah9ZjewCR0iV4pYw_Q'
+        }).addTo(mymap);
+        mymap.scrollWheelZoom.disable();
+        var circle = L.circle([30.3322, -81.6557], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 42000
+        }).addTo(mymap);
+      </script>
+      <br>
+
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">Mobility Page</a> maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
+
+        <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>

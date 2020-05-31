@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobility Impact Charts - Further Refinements</title>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+
+  <style type="text/css">
+  	ol li {
+  		padding-bottom: 15px;
+  	}
+  </style>
+</head>
+<body>
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+
+<section class="main-content">
+
+<h2>Further Refinements</h2>
+
+<h3>Current Paper</h3>
+
+<a href="https://github.com/modelearth/tweetdata">Data Overview (Private Repo)</a>
+<br><br>
+
+<ol>
+
+<!--
+<li>
+Coordinate with Ryan regarding charts to add to paper. For any charts not yet created by Loren in D3.js or Seaborn, Ryan could run his Python code to match the prior chart style.</li>
+
+<li>Coordinate with Ryan on formatting citations for <a href="https://www.nature.com/nature/for-authors/formatting-guide">Nature.com</a> or <a href="https://journals.plos.org/plosone/s/submission-guidelines">PLOS (Vancouver)</a> [<a href="http://www.citationmachine.net/plos-one/cite-a-websiteGenerator">Generator</a>]. Ryan maintains the citations in an editing app.</li>
+-->
+
+<li>
+  To add:<br>
+  8,601 geotagged tweets by 34 bots were removed using lists of known-bots. Source: https://github.com/tweetdata/Twitter-Bots
+</li>
+<li>
+	Included (add update): "Movement patterns are confined to a circle encompassing city boundaries based on the city center provided by a Google Search. The data does not include long-distance travel steps that start or end outside the urban boundary radius."
+  <!--
+    The intro could mention that storm exodus is not covered in the "city-scale" study since steps that end (or start) outside city areas are not included.  
+  -->
+</li>
+<li>
+  Added causation to Hypothesis 2:<br>
+  "Deviations from normal daily power-law mobility patterns correlate to wind intensity."
+
+  <!--
+	Consider phrasing hypothesis 2 as: “We hypothesize a disruption in normal daily <b>power-law</b> mobility patterns as the result of increased wind intensity.” Hypothesis 2 currently states that loss of resilience is caused by (comes from) a deviation from power-law. 
+  By treating a symptom as the cause, this is equivalent to saying, the loss of resilience is caused by a portion of travelers no longer traveling a long distance and/or staying at home breaks resiliency.  
+  -->
+  <!--
+
+    We hypothesize a disruption in normal daily power-law mobility pattern consisting of increases in both short distance travel steps (under 100 meters) and long distance exodus travel (over 10km) as the scale of storm wind intensity increases.
+  -->
+</li>
+<li>
+  Added causation to Hypothesis 3:<br>
+  "Disruptions to normal daily radii of gyration distances correlate to wind intensity."
+
+  <!--
+	Hypothesis 3 states that the loss of resilience is caused by (comes from) the aggregate effects of individuals changing their radii of gyrations. It’s semantically incorrect to say the changing radius causes the loss of resilience. Omitting the storm as the causation leaves open conjecture like, does a changing radii in weekend travel also lead to a loss of resilience? Possible alternative: “We hypothesize a disruption in normal daily <b>radii of gyration</b> distances as the result of increased wind intensity.”
+
+  stronger and longer lasting,
+
+  This wording could forecast a longer length of time before normal gyration patterns are restored.
+  -->
+</li>
+
+<li>
+    "Loss of Mobility Resilience" is a more accurate description that eliminates the barage of questions one encounters with simply "Loss of Resilience".  "Mobility Resilience" is the term used in the recent 2019 study.
+</li>
+<li>
+	Consider updating the title to fit the city-scale mobility pattern:<br>
+	"<b>Impact of Extreme Storms on City-Scale Human Mobility Resilience</b>"<br>
+  City-Scale would set the stage for papers on Community-Scale and Regional-Scale.
+
+  <!--
+    “Loss of Mobility Resilience in Daily Human Commutes Under the Influence of Hurricanes and Typhoons”<br>
+    “Loss of Mobility Resilience in City-Wide Travel Patterns Under the Influence of Extreme Storms”<br>
+  -->
+</li>
+<li>
+    Since Typhoon Haiyan's impact on Tacloban is the basis for the "Loss of Mobility Resilience" finding, 
+    more attention could be given to telling the story of this storm's impact. 
+    Compared to one year later, how did mobility patterns and Twitter usage change? 
+    (Use Rammasun Philippines data in table ph2014ram.)&nbsp; 
+    Where did the residents relocate to? (Fisherman were given new jobs inland.)
+</li>
+</ol>
+
+
+<h3>Future papers could...</h3>
+
+<ol>
+
+<li>
+Capture tweets directly to a NoSQL database with relational query support, such as Spark (an extension of Hadoop).
+</li>
+
+<li>Use <a href="https://www.ncdc.noaa.gov/cdo-web/">NOAA weather data API</a> or other data service for city wind data. 
+(Online news reporters do not always distinguish between sustained winds and gusts.) Sample using NOAA 3-hour wind data:
+<a href="http://model.earth/storms">model.earth/storms</a></li>  
+
+<li>Track 10-minute sustained, 2-minute sustained and gusts using weather <a href="https://www.ncdc.noaa.gov/data-access">data feeds</a>.</li>
+
+
+
+<!--
+<li>
+  Comparing the percentage mix between step distances to adjust for power outages. 
+</li>
+<li>
+    If an individual stays at home and tweets, their increased "0 step" movement 
+    during the storm should be considered as an indicator of lost mobility.
+</li>
+-->
+
+<!--
+<li>Change step 1 displacement range from 1-100 to 8-100 meters 
+	to allow for imprecise accuracy of geo-positioning (<a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0188734">Yan 2017</a>, <a href="https://scholar.google.com/scholar?q=Using+geolocated+Twitter+traces+to+infer+residence+and+mobility+Swier+">Swier 2015</a>).
+</li>
+-->
+
+<li>Generate city boundaries dynamically using city shape files, and/or use cones for storm paths similar to Yan's study.</li>
+
+<li>Use 3-hour time frames to match storm movement data.</li>
+
+<li>Compare impacts using 3-hour NOAA time periods to distinguish movement 
+before and after strong winds.</li>
+
+<li>
+  Analyse data using shorter time-frames coinciding with peak winds.
+</li>
+
+<li>
+  Limit origins of travel steps to smaller communities closer to the shore to see if hypothesis 2 is then supported.
+</li>
+
+<li>Include effect of steps entering and exiting city boundary areas.</li>
+
+<li>
+  Investigate effect of travelers that travel through cities (like Tampa and Jacksonville) and travelers that travel to cities during storms (like San Juan).
+</li>
+
+<li>Add granular tracking of smaller communities to capture areas closer to coast, but allow for long-steps leaving and entering smaller boundary areas.</li>
+
+<li>
+A more robust analysis of Tacloban could compare tweet levels across multiple years 
+while documenting how the end of automatic geotagging in 2015 impacted changing geotag levels 
+across multiple cities using data from the Philippines, Japan and Southeast US.
+</li>
+
+<li>Add more comprehensive mobility data from a cell phone company or popular mobile app.</li>
+
+<li>Establish the approximate home location of individuals (using weekend and evening posts) to include steps when individuals did not tweet from home before traveling to work and other destinations.</li>
+
+<li>Include longer distance travel step segments by including 10 to 50km, 50km to 200km, and over 200 km steps to distingish commutes from regional long step travel. Experiment with different split points (between 40km-100km and 200km-300km) to find points that evenly cluster normal step distances.</li>
+
+<li>Anonymize using zipcodes to provide real-time reporting with demographic details.</li>
+
+<li>Create data exchanges with other university departments, power companies, volunteer organizations, and sustainable development initiatives.</li>
+
+</ol>
+
+
+</section>
+</body>
+</html>

@@ -1,0 +1,77 @@
+---
+title: "poweRlaw package"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Submitted isssue: https://github.com/csgillespie/poweRlaw/issues/83
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button (cmd-shift-k) a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r mypowerlaw, echo=TRUE}
+library("poweRlaw")
+data("moby", package="poweRlaw")
+##data <- read.csv(file="words.txt")
+##data.moby <- read.csv(file="wordshalf.txt") ## Seems to still show same chart
+
+## To try: https://csgillespie.github.io/efficientR/input-output.html
+## To do: install rio
+## library("rio")
+## fname = system.file("extdata/voc_voyages.tsv", package = "efficient")
+## moby = system.file("wordshalf.txt", package = "poweRlaw")
+
+moby.dataset <- read.csv(file="wordshalf.txt")
+##moby.moby ##Inspect the results
+
+moby.dataset ##Inspect the results
+
+m_m = displ$new(moby)
+
+m_m$setXmin(5)
+m_m$setPars(2)
+(est = estimate_pars(m_m))
+## $pars
+## [1] 1.925882
+##
+## $value
+## [1] 14872.57
+##
+## $counts
+## function gradient
+## 5 5
+##
+## $convergence
+## [1] 0
+##
+## $message
+## [1] "CONVERGENCE: REL_REDUCTION_OF_F <= FACTR*EPSMCH"
+##
+## attr(,"class")
+## [1] "estimate_pars"
+
+## Plot the data (from xmin)
+plot(m_m)
+## Add in the fitted distribution
+lines(m_m, col=2)
+```
+
+```{r cars2}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

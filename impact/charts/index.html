@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobility Impact Charts - All</title>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <link rel="icon" type="image/x-icon" href="../img/logo/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css" media="screen">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="../css/stylesheet.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="../css/github-light.css" media="screen">
+
+  <style>
+    tr:nth-child(odd) {background: #eee}
+  </style>
+
+</head>
+<body>
+<section class="main-content topnavbar">
+    <a href="/"><img src="../img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="../">Overview</a> | 
+    <a href="../charts">Storm Stats</a> | 
+    <a href="../cities.html">City Boundaries</a> | 
+    <a href="../process.html">Data Processing</a> | 
+    <a href="../charts.html">Impact Charts</a> |
+    <a href="../refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+    <section style="padding-left:30px">
+
+      <h2>Storm Mobility Steps</h2>
+
+      <div style="float:left; margin-right:30px">
+        
+        <b>Travel steps:</b><br>
+        (0) 0-30 meters (stationary, building)<br>
+        (1) 30-400 meters (steet, local, walkable)<br>
+        (2) 400m-1 km (community)<br>
+        (3) 1-5 km (city)<br>
+        (4) 5-10 km (metro)<br>
+        (5) 10-50 km (burbs)<br>
+        (6) 50 km and over (distant travel)<br><br>
+      </div>
+
+      <div style="float:left">
+        Also see: <a href="../stats.html">Storm stats using older step cusps</a><br><br>
+      </div>
+
+      <div style="clear:both; font-size: 16px; margin-bottom:10px">
+      The city-scale mobility study uses a city boundary radius ranging from 6 to 50 km. 
+      As a result, some cities do not include travel steps over 50 km (step 6). 
+      </div>
+
+    </section>
+
+
+      <!--
+      D3 - CSV to HTML table - Includes array to html and circle sample
+      http://bl.ocks.org/ndarville/7075823
+      http://christopheviau.com/d3_tutorial/
+      -->
+
+      <div style="margin-left:30px;padding-right:30px;float:left">
+        <div class="eTable" id="d3div"></div>
+        <div style="font-size: 9px">
+        Download <a href="data/all_summary.csv">CSV File</a> | 
+        The csv file displayed above is embedded using a <a href="http://bl.ocks.org/ndarville/7075823">D3.js CSV to HTML table</a>. 
+        <!--
+        &nbsp;<a href="https://mobileearth.github.com/tweetdata/sql/all_summary.md">SQL Query (private)</a>
+        -->
+        </div><br><br>
+      </div>
+
+      <!-- For D3 Embedded CSV Sheet -->
+      <style>
+          table {
+              border-collapse: collapse;
+              border: 2px black solid;
+              font: 12px sans-serif;
+              min-height: 10px;
+          }
+          td {
+              border: 1px black solid;
+              padding: 5px;
+              white-space: nowrap;
+          }
+      </style>
+      <script src="https://d3js.org/d3.v3.min.js"></script>
+      <script type="text/javascript" charset="utf-8">
+          d3.text("data/all_summary.csv", function(data) {
+              var parsedCSV = d3.csv.parseRows(data);
+
+              var container = d3.select("#d3div")
+                  .append("table")
+
+                  .selectAll("tr")
+                      .data(parsedCSV).enter()
+                      .append("tr")
+
+                  .selectAll("td")
+                      .data(function(d) { return d; }).enter()
+                      .append("td")
+                      .text(function(d) { return d; });
+            });
+        </script>
+        <!-- End D3 Embedded CSV Sheet -->
+
+        <br>
+
+  </body>
+</html>

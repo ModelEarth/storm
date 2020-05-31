@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Mobility Data Visual Analytics by lheyns3</title>
+    <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+    <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+  </head>
+  <body>
+<!--
+    <section class="page-header">
+      <h1 class="project-name">Mobility Impact Charts</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.gatech.edu/lheyns3/TW-Charts" class="btn">View on GitHub</a>
+    </section>
+-->
+
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+<section class="main-content">
+
+<!--
+When initiating the GitHub pages for this repo, gh-pages was NOT seleted.  Therefore, it's not necessary to make changes in a separate branch.
+
+The install stated: GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.
+-->
+
+<h2>Data Processing</h2>
+
+<p>
+    <a href="capture.html">After capturing data from Twitter</a>, the following steps are used to pre-process Twitter geotagged records for mobility studies to allow for fast searches and visual analytics.<br><br>
+    
+Pre-processing occurs in PostgreSQL using an imported CSV file containing an id, latitude, longitude and created date. 
+The following steps are preliminary to generating CSV output with 5-day norm-to-impact data, 6 displacement step tiers, 
+and daily radius of gyration calculations for a 33-day span surrounding each storm.  
+<!--
+While the process was set-up for Twitter mobility data for storm impact analytics, potential future uses include shared mobility vehicle tracking using open APIs cities are requiring of shared mobility companies like Bird, Lime and Uber-Jump.
+-->
+<br><br>
+
+To try: <a href="https://docs.aws.amazon.com/en_pv/AmazonRDS/latest/AuroraUserGuide/query-editor.html">Using the Query Editor for Aurora Serverless</a>
+
+</p>
+
+<!-- Might not be the latest:
+To view each user's displacement by day, run: sql/user-day-pivot.md<br>
+Use sql/gyration.md for csv output.
+-->
+
+
+
+<!--
+Use with regression line
+change_step_avg_degrees_abs
+
+Didn't use
+<h3>F.) Change only</h3>
+<p>1 row for each storm by limiting 6 steps to 1<br>
+<a href="https://github.gatech.edu/lheyns3/TW/blob/master/sql/perturbation-chart.txt">Perturbation-Chart.md</a> (private repo)
+</p>
+-->
+
+
+<hr><a name="steps"></a>
+
+<h2>A. Import and Prep Data within PostgreSQL</h2>
+
+In the first three steps, data is merged and duplicates in the source data are removed. 
+The process then adds local times (including daylight savings time),  
+position geometry (geom) for the current location and prior post location. The geom is used to calculate the displacement 
+distance traveled between posts (within days starting at 3am), and a universally unique ID (guid) is added to prevent future duplicates.  
+
+
+<h3>1. CREATE A NEW TABLE</h3>
+
+<p>
+Generate table with script, then import and merge multiple months and any missing days. 
+AWS recommends managing PostgreSQL database using the client app 
+<a href="https://www.pgadmin.org/">pgAdmin</a>, which includes CSV import and export tools. 
+</p>
+
+<pre>
+CREATE TABLE public.matthew_jacksonville
+(
+    twitter_uid bigint NOT NULL,
+    created TIMESTAMPTZ,
+    longitude real,
+    latitude real
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+ALTER TABLE public.matthew_jacksonville
+    OWNER to dataportal;
+
+-- Refresh your table list after creating new table
+</pre>
+
+<p>
+When importing a Twitter CSV file from a Northeastern University Mongo export 
+<!-- which is provded by Edgar and Ryan, one of JT's former students -->, use the following script. 
+The rows provided are: id, user_id, lon, lat, created_at, text. The 
+"created" column is in text format initially to match the data source. <!-- avoids import error --></p>
+
+<!-- # Used for se20170930 and harveyEdg@r -->
+
+<pre>
+-- FOR DATA PROVIDED BY NORTEASTERN UNIVERSITY
+CREATE TABLE public.matthew_jacksonville <!-- FOR FILES FROM EDGAR -->
+(
+    id bigint NOT NULL,
+    twitter_uid bigint NOT NULL,
+    longitude real NOT NULL,
+    latitude real NOT NULL,
+    createdText text NOT NULL,
+    text text
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+ALTER TABLE public.matthew_jacksonville
+    OWNER to dataportal;
+
+For 2013 Northeastern data, run after adding other indexes 
+(omit the created index in step 5) and importing:
+<!--427 seconds, 1,267,618 rows for harveyEdg@r -->
+ALTER TABLE public.matthew_jacksonville 
+ADD COLUMN created TIMESTAMPTZ;
+UPDATE matthew_jacksonville SET created = to_timestamp(createdText::int);
+CREATE INDEX matthew_jacksonville_created_index ON matthew_jacksonville (created);
+ALTER TABLE public.matthew_jacksonville 
+DROP COLUMN createdText,
+DROP COLUMN id,
+DROP COLUMN text;
+</pre>
+
+
+<h3>2. IMPORT/MERGE INTO ONE TABLE</h3>
+
+<p>
+Import 1 or more csv files into the same table when data has multiple source files.
+</p>
+
+<p>
+Large CSV files need to be reduced below 1GB prior to import into PostgreSQL using pgAdmin. 
+The app CSVSplitter will reduce to 5 million rows per file, leading to 5 files per GB. 
+</p>
+
+<pre>
+In pgAdmin, right click table and choose Import/Export. (Refresh tables if not visible.)
+- Works without setting Encoding.
+- Set to Import. Set Header to yes.
+- Next two are not necessary, unless importing descriptions:
+- Set delimiter to comma
+
+Set the Escape charater to " to avoid error from Arabic.  
+(This is only an issue when the CSV has unquoted text fields with the username or tweet text.)
+
+The import will return the count after the word COPY under More Details.
+Record count and distinct count on storm's GitHub repo readme page.
+(Wait to remove dups, after adding guid, as one step so vacuum can be run just once.)
+
+Wait to insert extra columns (step 4) after import to avoid the error: missing data for column.
+If storing altitude, use geometry PointZ rather than Point.
+</pre>
+
+
+<h3>3. ADD THE_GEOM - DELETES DUPS</h3>
+<p>
+The raw data often contains posts that occur at the same time and location. 
+Use the following to create a temp table containing the distinct rows, then copy back to original table name.
+</p>
+<pre>
+-- Make note of total vs unique rows
+SELECT count(*) total, (SELECT count(*) FROM (SELECT DISTINCT twitter_uid, created, 
+latitude, longitude FROM matthew_jacksonville)x) AS distinctTotal FROM matthew_jacksonville;
+
+-- The following takes 3 minutes for 20 million rows
+
+-- step 1 - Move to a new table to make distinct
+CREATE TABLE matthew_jacksonville_temp (LIKE matthew_jacksonville);
+ 
+-- step 2
+INSERT INTO matthew_jacksonville_temp(twitter_uid, created, latitude, longitude)
+SELECT DISTINCT twitter_uid, created, latitude, longitude FROM matthew_jacksonville; 
+
+-- RUN "SET the_geom" here. (Difference of hours verses over 8 days for 20 million
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+ALTER TABLE matthew_jacksonville_temp ADD COLUMN the_geom geometry(Point,4326);
+
+UPDATE matthew_jacksonville_temp SET the_geom = ST_SetSrid(ST_MakePoint(longitude, latitude), 4326);
+
+-- step 3 - Replace original table
+DROP TABLE matthew_jacksonville;
+ 
+CREATE TABLE matthew_jacksonville (LIKE matthew_jacksonville_temp);
+
+INSERT INTO matthew_jacksonville(twitter_uid, created, latitude, longitude, the_geom)
+SELECT DISTINCT twitter_uid, created, latitude, longitude, the_geom FROM matthew_jacksonville_temp;
+
+DROP TABLE matthew_jacksonville_temp;
+</pre>
+
+
+<h3>4. ADD COLUMNS</h3>
+<pre>
+-- 3.5 minutes for 20 million rows
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+ALTER TABLE matthew_jacksonville
+ADD COLUMN localdate TIMESTAMPTZ,
+ADD COLUMN displacement real,
+ADD COLUMN displacement_hav real,
+ADD COLUMN prior_created TIMESTAMPTZ,
+ADD COLUMN prior_localdate TIMESTAMPTZ,
+ADD COLUMN prior_latitude real,
+ADD COLUMN prior_longitude real,
+-- ADD COLUMN the_geom geometry(Point,4326), -- Added in prior step
+ADD COLUMN prior_geom geometry(Point,4326),
+ADD COLUMN guid uuid DEFAULT uuid_generate_v4() NOT NULL unique,
+ADD COLUMN prior_guid uuid,
+ADD COLUMN datasource smallint;
+
+</pre>
+
+
+<!--
+Moved to step 3
+<h3>5. SET the_geom</h3>
+
+<p>
+If this step takes more than a few hours for a table exceeding 1 million rows, 
+copy the table (use the DISTINCT step) and add only the uid index.  Copy back later prior to adding all indexes.
+
+</p>
+
+<pre>
+UPDATE matthew_jacksonville SET the_geom = ST_SetSrid(ST_MakePoint(longitude, latitude), 4326);
+</pre>
+-->
+
+<h3>6. MERGE DATA</h3>
+
+<p>
+You'll typically skip this step since merges occur before extra columns are added. 
+Used occasionally to add missing data.
+</p>
+
+<pre>
+-- Simple additions to file being merged into the main file that already has all columns
+
+ALTER TABLE matthew_jacksonville_MONTH ADD COLUMN guid uuid DEFAULT uuid_generate_v4() NOT NULL unique;
+
+INSERT INTO matthew_jacksonville (twitter_uid, created, longitude, latitude, guid)
+SELECT twitter_uid, created, longitude, latitude, guid
+FROM matthew_jacksonville_MONTH WHERE created >= '2017-10-06 00:00';
+
+# If from external source, <!--Edgar -->include datasource.
+
+INSERT INTO matthew_jacksonville (twitter_uid, created, longitude, latitude, guid, datasource)
+SELECT twitter_uid, created1, longitude, latitude, guid, 1
+FROM matthew_jacksonville_MONTH;
+
+INSERT INTO matthew_jacksonville (twitter_uid, created, longitude, latitude, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, the_geom, prior_geom, guid, prior_guid, datasource) 
+SELECT twitter_uid, created, longitude, latitude, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, the_geom, prior_geom, guid, prior_guid, datasource 
+FROM ph2014 WHERE created 
+BETWEEN SYMMETRIC '2014-06-20 04:00' AND '2017-08-05 04:00';
+</pre>
+
+
+<h3>7. SET THE LOCAL DATE</h3>
+
+<p>
+Times in the "created" date field are GMT for both sources (NDL and Northeastern).
+Yan's day-light-savings times are incorrect by one hour for the summer of 2018:
+11 March 2018 2am to 4 November 2018 2am. She changed the time on her Twitter capture server.
+</p>
+
+<pre>
+-- RUN ONE OF THE FOLLOWING, OR TWO IF NOV OR MARCH.
+-- CHOOSE DATABASE (created is in GMT and should never be changed. Change localdate.)
+-- For USA, summer and fall daylight savings, subtract 4 
+
+UPDATE j@pan SET localdate = created AT TIME ZONE 'GMT' + interval '1h' * 9;
+UPDATE h0ngkong SET localdate = created AT TIME ZONE 'GMT' + interval '1h' * 8;
+UPDATE tw2@16 SET localdate = created AT TIME ZONE 'GMT' + interval '1h' * 8;
+UPDATE j@2014 SET localdate = created AT TIME ZONE 'GMT' + interval '1h' * 8;
+UPDATE ph2@14 SET localdate = created AT TIME ZONE 'GMT' + interval '1h' * 8;
+
+-- Nov cutoff date here (run both)
+UPDATE se2017 SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 4 WHERE created < '2017-11-5 02:00:00';
+UPDATE se2017 SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 5 WHERE created >= '2017-11-5 02:00:00';
+
+-- harveyEdg@r 2017-05-19 03:18:20+00 to 2018-10-04 06:04:45+00 (10 minutes to run)
+UPDATE harveyEdg@r SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 5 WHERE created < '2017-11-5 02:00:00';
+UPDATE harveyEdg@r SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 6 WHERE created >= '2017-11-5 02:00:00';
+
+
+UPDATE m@tthew_jacksonville SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 4 WHERE created < '2016-11-6 02:00:00';
+UPDATE m@tthew_jacksonville SET localdate = created AT TIME ZONE 'GMT' - interval '1h' * 5 WHERE created >= '2016-11-6 02:00:00';
+
+
+Standard time is 
+Sunday 4 November 2018 02:00 local time to Sunday 10 March 2019 02:00 local time
+
+Subtract 4 hours when US storm and...
+2013    10 March 2013 2am  to 3 November 2013 2am
+2014    9 March 2014 2am   to 2 November 2014 2am
+2015    8 March 2015 2am   to 1 November 2015 2am
+2016    13 March 2016 2am  to 6 November 2016 2am
+2017    12 March 2017 2am  to 5 November 2017 2am
+2018    11 March 2018 2am  to 4 November 2018 2am
+
+Otherwise subtract 5 hours (standard time in the winter)
+
+Past and future ranges: https://greenwichmeantime.com/time-zone/rules/usa/
+
+The actual time zone is NOT saved with any of the Postgres date/time types.
+
+Each date file generated from the pickle files originates at midnight EST.
+The GMT time hence differs by either 4 or 5 hours from midnight.
+
+</pre>
+
+
+<h3>8. GET THE USER'S NEXT TWEET AND INSERT DISPLACEMENT DISTANCE</h3>
+
+<p>For smaller datasets:
+<!--The following would not run on 9MB dataset in Carto -->
+</p>
+<pre>
+Discontinue using this first one.
+Runtimes:
+6.5 million over 3 days (canceled) when 3 indexes already added.  Try with no indexes next on table over 1 million.<br>
+24 minutes, now 31 (after guid and renaming id to twitter_uid) on se 201,309 (Irma)
+1 minute for hongkong (Mangkhut)
+
+Took more than 12 hours on harveyEdg@r. All prior queries were fast for harveyEdg@r, which contains 1.2 million rows.
+
+--Table alias "b" is the next tweet, insert values from the individual's prior tweet row "a"
+WITH subquery AS (
+  SELECT
+    b.guid, a.guid prior_guid, a.created, a.localdate,
+    ST_DistanceSphere(a.the_geom,b.the_geom)/1000 displacement,
+    a.the_geom, a.latitude, a.longitude
+  FROM
+    matthew_jacksonville a JOIN matthew_jacksonville b -- Select the user's next upcoming row 
+    ON a.twitter_uid = b.twitter_uid AND b.created > a.created AND 
+    b.guid = (SELECT c.guid FROM matthew_jacksonville c WHERE c.twitter_uid = a.twitter_uid 
+    AND c.created > a.created ORDER by c.created LIMIT 1)
+)
+UPDATE matthew_jacksonville theData
+SET displacement = subquery.displacement,
+prior_created = subquery.created,
+prior_localdate = subquery.localdate,
+prior_geom = subquery.the_geom,
+prior_latitude = subquery.latitude,
+prior_longitude = subquery.longitude,
+prior_guid = subquery.prior_guid,
+-- http://daynebatten.com/2015/09/latitude-longitude-distance-sql/
+-- 6371=radius earth in kilometers
+displacement_hav = 2 * 6371 * asin(sqrt((sin(radians((theData.latitude - subquery.latitude) / 2))) ^ 2 + cos(radians(subquery.latitude)) * cos(radians(theData.latitude)) * (sin(radians((theData.longitude - subquery.longitude) / 2))) ^ 2))
+FROM subquery
+WHERE theData.guid = subquery.guid;
+</pre>
+
+
+<p>
+For large datasets exceeding 1 million, we'll join an indexed table to a copy 
+of the table where updates will occur to <a href="https://stackoverflow.com/questions/3361291/slow-simple-update-query-on-postgresql-database-with-3-million-rows">avoid slow simple update queries on PostgreSQL database</a> by using the following (Reduces runtime from days to hours. 3 hours for 6.5 million, otherwise over 3 days.)<br><br>
+
+<a href="https://www.codacy.com/blog/how-to-update-large-tables-in-postgresql/">Learn more</a> about dropping all the indexes, triggers and foreign keys while the 
+update runs, then recreate them at the end.
+
+
+<br><br>
+
+If indexes remain in place, there's not much speed improvement from running Vaccum, Analyze and Reindex. 
+(2.5 hrs for 8.5 mil without running. Still 3hrs for 6.5mil after running with retained indexes.)
+</p>
+
+<pre>
+-- Add indexes on the three fields to be used by the join (twitter_uid, created, guid)
+CREATE INDEX matthew_jacksonville_twitter_uid_index ON matthew_jacksonville (twitter_uid);
+CREATE INDEX matthew_jacksonville_created_index ON matthew_jacksonville (created);
+CREATE INDEX matthew_jacksonville_guid_index ON matthew_jacksonville (guid);
+
+CREATE TABLE matthew_jacksonville_copy (LIKE matthew_jacksonville);
+
+-- Note, this cannot be modified to set as DISTINCT since localdate is already populated. Distinct occurs previously.
+INSERT INTO matthew_jacksonville_copy(twitter_uid, created, latitude, longitude, the_geom, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, prior_geom, guid, prior_guid, datasource)
+SELECT twitter_uid, created, latitude, longitude, the_geom, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, prior_geom, guid, prior_guid, datasource FROM matthew_jacksonville;
+
+WITH subquery AS (
+  SELECT
+    b.guid, a.guid prior_guid, a.created, a.localdate,
+    ST_DistanceSphere(a.the_geom,b.the_geom)/1000 displacement,
+    a.the_geom, a.latitude, a.longitude
+  FROM
+    matthew_jacksonville a JOIN matthew_jacksonville b -- Select the user's next upcoming row 
+    ON a.twitter_uid = b.twitter_uid AND b.created > a.created AND 
+    b.guid = (SELECT c.guid FROM matthew_jacksonville c WHERE c.twitter_uid = a.twitter_uid 
+    AND c.created > a.created ORDER by c.created LIMIT 1)
+)
+UPDATE matthew_jacksonville_copy theData
+SET displacement = subquery.displacement,
+prior_created = subquery.created,
+prior_localdate = subquery.localdate,
+prior_geom = subquery.the_geom,
+prior_latitude = subquery.latitude,
+prior_longitude = subquery.longitude,
+prior_guid = subquery.prior_guid
+-- http://daynebatten.com/2015/09/latitude-longitude-distance-sql/
+-- 6371=radius earth in kilometers
+--displacement_hav = 2 * 6371 * asin(sqrt((sin(radians((theData.latitude - subquery.latitude) / 2))) ^ 2 + cos(radians(subquery.latitude)) * cos(radians(theData.latitude)) * (sin(radians((theData.longitude - subquery.longitude) / 2))) ^ 2))
+FROM subquery
+WHERE theData.guid = subquery.guid;
+
+
+------------------
+
+-- Skip the following. Only used for comparing displacement_hav formula.
+-- Populate displacement_hav. Also requires having two tables so indexes in one speed-up finding prior displacement.
+CREATE TABLE matthew_jacksonville_copy (LIKE matthew_jacksonville);
+INSERT INTO matthew_jacksonville_copy(twitter_uid, created, latitude, longitude, the_geom, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, prior_geom, guid, prior_guid, datasource)
+SELECT twitter_uid, created, latitude, longitude, the_geom, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, prior_geom, guid, prior_guid, datasource FROM matthew_jacksonville;
+WITH subquery AS (
+  SELECT
+    b.guid, a.guid prior_guid, a.created, a.localdate,
+    a.the_geom, a.latitude, a.longitude
+  FROM
+    matthew_jacksonville a JOIN matthew_jacksonville b -- Select the user's next upcoming row 
+    ON a.twitter_uid = b.twitter_uid AND b.created > a.created AND 
+    b.guid = (SELECT c.guid FROM matthew_jacksonville c WHERE c.twitter_uid = a.twitter_uid 
+    AND c.created > a.created ORDER by c.created LIMIT 1)
+)
+UPDATE matthew_jacksonville_copy theData
+SET displacement_hav = 2 * 6371 * asin(sqrt((sin(radians((theData.latitude - subquery.latitude) / 2))) ^ 2 + cos(radians(subquery.latitude)) * cos(radians(theData.latitude)) * (sin(radians((theData.longitude - subquery.longitude) / 2))) ^ 2))
+FROM subquery
+WHERE theData.guid = subquery.guid;
+
+
+
+-- Run the following after first query above.
+-- If storage is exceeded, process above may end without notification.
+-- So we pause here.  Otherwise check if displacement field is populated to confirm copy sequence completed.
+-- Delete initial and rename copy to replace (compart count on copy first)
+
+DROP TABLE matthew_jacksonville;
+CREATE TABLE matthew_jacksonville (LIKE matthew_jacksonville_copy);
+
+INSERT INTO matthew_jacksonville(twitter_uid, created, longitude, latitude, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, the_geom, prior_geom, guid, prior_guid, datasource)
+SELECT DISTINCT twitter_uid, created, longitude, latitude, localdate, displacement, displacement_hav, prior_created, prior_localdate, prior_latitude, prior_longitude, the_geom, prior_geom, guid, prior_guid, datasource FROM matthew_jacksonville_copy;
+
+DROP TABLE matthew_jacksonville_copy;
+</pre>
+
+<!--
+-- https://stackoverflow.com/questions/6975669/using-the-haversine-formula-with-postgresql-and-pdo
+-- subquery.latitude occurs once, subquery.longitude occurs twice.
+-- Not correct
+distance_degrees = ( 6371 * acos( cos( radians(subquery.longitude) ) * cos( radians( theData.latitude ) ) * cos( radians( theData.longitude ) - radians(subquery.latitude) ) + sin( radians(subquery.longitude) ) * sin( radians( theData.latitude ) ) ) )
+
+-->
+
+
+<h3>9. ADD INDEXES<!--ADD PORTION OF REMAINING INDEXES was before the previous step.--></h3>
+
+
+We add indexes last, because table constraints and indexes heavily delay every write.<br><br>
+
+
+
+<pre>
+-- Typically skip this dropping part
+-- Used whek dropping and adding table becuae , run first
+DROP INDEX matthew_jacksonville_twitter_uid_index;
+DROP INDEX matthew_jacksonville_created_index;
+DROP INDEX matthew_jacksonville_guid_index;
+
+DROP INDEX matthew_jacksonville_latitude_index;
+DROP INDEX matthew_jacksonville_longitude_index;
+DROP INDEX matthew_jacksonville_prior_created_index;
+DROP INDEX matthew_jacksonville_localdate_index;
+DROP INDEX matthew_jacksonville_prior_guid_index;
+DROP INDEX matthew_jacksonville_the_geom;
+DROP INDEX matthew_jacksonville_prior_geom;
+DROP INDEX matthew_jacksonville_displacement_index;
+
+
+
+
+-- Runs in less than 10 minutes for 8 million records.
+
+-- Readd 3 indexes from step 8 since deleted when copying back data
+CREATE INDEX matthew_jacksonville_twitter_uid_index ON matthew_jacksonville (twitter_uid);
+CREATE INDEX matthew_jacksonville_created_index ON matthew_jacksonville (created);
+CREATE INDEX matthew_jacksonville_guid_index ON matthew_jacksonville (guid);
+
+CREATE INDEX matthew_jacksonville_latitude_index ON matthew_jacksonville (latitude);
+CREATE INDEX matthew_jacksonville_longitude_index ON matthew_jacksonville (longitude);
+CREATE INDEX matthew_jacksonville_prior_created_index ON matthew_jacksonville (prior_created);
+CREATE INDEX matthew_jacksonville_localdate_index ON matthew_jacksonville (localdate);
+CREATE INDEX matthew_jacksonville_prior_guid_index ON matthew_jacksonville (prior_guid);
+CREATE INDEX matthew_jacksonville_the_geom ON matthew_jacksonville USING GIST (geography(the_geom));
+CREATE INDEX matthew_jacksonville_prior_geom ON matthew_jacksonville USING GIST (geography(prior_geom));
+CREATE INDEX matthew_jacksonville_displacement_index ON matthew_jacksonville (displacement);
+
+
+
+
+-- Run the following to see all indexes on table:
+-- Includes key for unique index on guid
+-- CASE SENSITIVE, use lowercase since capital letters are ignored in initial table and index inserts.
+SELECT * FROM pg_indexes WHERE tablename = 'matthew_jacksonville';
+
+-- Show which columns are indexed. Excludes the 2 geom columns.
+select
+    t.relname as table_name,
+    i.relname as index_name,
+    array_to_string(array_agg(a.attname), ', ') as column_names
+from
+    pg_class t,
+    pg_class i,
+    pg_index ix,
+    pg_attribute a
+where
+    t.oid = ix.indrelid
+    and i.oid = ix.indexrelid
+    and a.attrelid = t.oid
+    and a.attnum = ANY(ix.indkey)
+    and t.relkind = 'r'
+    and t.relname like 'matthew_jacksonville'
+group by
+    t.relname,
+    i.relname
+order by
+    t.relname,
+    i.relname;
+
+
+
+
+</pre>
+
+
+<h3>10. Remove Bots (none found previously)</h3>
+
+<p>
+    
+Add a table with a twitter_uid column containing known bots.
+
+<a href="https://github.com/fivethirtyeight/russian-troll-tweets/issues/37">russian-troll-tweets</a> - 
+<a href="https://github.com/fivethirtyeight/russian-troll-tweets/files/2278803/external_author_id_rounding_fixes.zip">List of bots</a>
+
+Ran in: m@tthew_jacksonville, se2017, se2018, tw2016, harvey_houston, hongkong, ja2014 (none found)
+</p>
+<pre>
+SELECT count(*) FROM bots JOIN matthew_jacksonville 
+ON bots.twitter_uid = matthew_jacksonville.twitter_uid;
+
+
+CREATE TABLE public.bots
+(
+    twitter_uid bigint NOT NULL
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.bots
+    OWNER to dataportal;
+
+-- After importing
+</pre>
+
+<h3>11. FOR LARGE DATASET, VACUUM</h3>
+<p>
+Using FULL VACUUM locks table.  Vaccuming large tables may exceed storage capacity.
+Verbose report returns all 0's, so might not need to select.<br><br>
+
+(22 seconds on 6.5 million after copying and indexing. So vacumming may not be necessary immediately after adding indexes.)<br>
+</p>
+<pre>
+-- Right-click the table name, choose Maintenance. Retain full as NO.
+</pre>
+
+
+
+<h3>12. PRE-PROCESSING IN POSTGRESQL</h3>
+
+The remaining steps for data preparation are managed internally.  
+Contact us with special requests if you are working on research that needs additional pre-processing.<br><br>
+
+<hr>
+
+
+
+<h2>B.) 33 Day Span AND Radii of Gyration for days within 33 Day Span</h2>
+<p>15 days before and 17 days after storm (plus overlap for 3am end-of-day times).<br>
+<a href="https://github.com/modelearth/tweetdata/blob/master/sql/dynamic-function.md">Dynamic-Function.md</a> (private repo)
+</p>
+
+<h2>C.) 5-Day Norm and Impact - All Storms</h2>
+<p>Use isimpactday='YES' to display the day of impact.<br>
+<a href="https://github.com/modelearth/tweetdata/blob/master/sql/norm-impact-chart.md">Norm-Impact-Chart.md</a> (private repo)
+</p>
+
+<h2>D.) Perturbation - 6 Discrete Displacement Steps - All Storms</h2>
+<p>Uses Norm-Impact-Chart to output 6 rows for each storm. 
+Includes output of degrees to match figure 1.  Also includes percent change.<br>
+<a href="https://github.com/modelearth/tweetdata/blob/master/sql/perturbation-chart.md">Perturbation-Chart.md</a> (private repo)
+</p>
+
+<h2>E.) Generate Gyration All</h2>
+<p>Utilizes *_gyration tables generated by dynamic-function.md
+240,611 user days of gyration. Of these, 81,024 have 5 or more steps.
+Does not include step_type since each gyration covers whole city.
+<a href="https://github.com/modelearth/tweetdata/blob/master/sql/gyration-all.md">Gyration-All.md</a> (private repo)
+</p>
+
+<h2>F.) Genertate all_summary and all_displacement (PowerLaw)</h2>
+<p>Utilizes all_norm_and_impact table.</p>
+
+<!--
+<h2>B.) Impact Summary (Averages for 5-Day Norm and Day-of-Impact)</h2>
+<p>
+Utilizes "normal_and_impact" function within dynamic.md.
+Creates a summary with 6 rows per storm. Displayed from CSV file on the overview page.<br>
+<a href="https://github.com/modelearth/tweetdata/blob/master/sql/impact.md">Impact.md</a> (private repo)
+</p>
+
+<h2>G. Generate Daily Per-User Displacement and Radius of Gyration</h2>
+<p>
+<a href="https://github.gatech.edu/lheyns3/TW/blob/master/sql/gyration-by-day.md">Gyration-By-Day.md</a> (private repo)
+</p>
+-->
+
+<!--
+<h2>F.) Perturbation - Second script on Perturbation-Chart.md - Need to check if usable</h2>
+<p><br>
+<a href="https://github.gatech.edu/lheyns3/TW/blob/master/sql/perturbation-chart.txt">Perturbation-Chart.md</a> (private repo)
+</p>
+
+<p>Contact us to partner on research using our private repos</p>
+-->
+
+
+
+<!--
+<h1>Data Science Resources</h1>
+
+<h3>Axes in R and Python (including Panda) - with code comparison</h3>
+
+<p>
+<a href="https://plot.ly/r/axes/">View examples</a> 
+of linear and logarithmic axes, axes titles, styling, coloring axes, and grid lines.
+</p>
+-->
+
+</section>
+
+<!--
+-- Finishes, but actually doesn't
+
+-- step 4 -- In theory, creating a new table will cleanup better than renaming.
+-- CREATE TABLE matthew_jacksonville (LIKE dup_temp);
+
+INSERT INTO matthew_jacksonville(twitter_uid, created, latitude, longitude, the_geom)
+SELECT DISTINCT twitter_uid, created, latitude, longitude, the_geom FROM dup_temp;
+
+DROP TABLE dup_temp;
+
+
+
+ERROR:  null value in column "guid" violates not-null constraint
+DETAIL:  Failing row contains (1183, 2014-07-02 06:34:21+00, 125.606, 7.0709, 0101000020E610000000000080C7665F40000000009A481C40, null, null, null, null, null, null, null, null, null, null, null).
+SQL state: 23502
+-->
+
+
+
+</body>
+</html>

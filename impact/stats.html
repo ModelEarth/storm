@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobility Impact Charts - Cities</title>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <link rel="icon" type="image/x-icon" href="../img/logo/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+</head>
+<body>
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+    <section style="padding-left:30px">
+
+      <h2>Storm Mobility Stats</h2>
+
+      The following was used to select cities with enough geotagged Tweets for detecting mobility pattern changes.
+
+      Tiapei was used for Typoon Meranti since Kaohsiung tweets were low. 
+      Typoon Haiyan had 12 tweets the day of impact due to power outages.  
+      See the more recent <a href="charts">Storm Mobility Steps</a>.
+      </section><br>
+
+
+      <!--
+      D3 - CSV to HTML table - Includes array to html and circle sample
+      http://bl.ocks.org/ndarville/7075823
+      http://christopheviau.com/d3_tutorial/
+      -->
+
+      <div style="margin-left:30px;margin-right:30px;">
+        <div class="eTable" id="d3div"></div>
+        <div style="font-size: 9px">
+        Download <a href="charts/Impact-Combined.csv">CSV File</a> | 
+        The csv file displayed above is embedded using a <a href="http://bl.ocks.org/ndarville/7075823">D3.js CSV to HTML table</a>
+        </div><br><br>
+      </div>
+
+      <!-- For D3 Embedded CSV Sheet -->
+      <style>
+          table {
+              border-collapse: collapse;
+              border: 2px black solid;
+              font: 12px sans-serif;
+              min-height: 10px;
+          }
+          td {
+              border: 1px black solid;
+              padding: 5px;
+          }
+      </style>
+      <script src="https://d3js.org/d3.v3.min.js"></script>
+      <script type="text/javascript" charset="utf-8">
+          d3.text("charts/Impact-Combined.csv", function(data) {
+              var parsedCSV = d3.csv.parseRows(data);
+
+              var container = d3.select("#d3div")
+                  .append("table")
+
+                  .selectAll("tr")
+                      .data(parsedCSV).enter()
+                      .append("tr")
+
+                  .selectAll("td")
+                      .data(function(d) { return d; }).enter()
+                      .append("td")
+                      .text(function(d) { return d; });
+            });
+        </script>
+        <!-- End D3 Embedded CSV Sheet -->
+
+        <br>
+
+  </body>
+</html>

@@ -1,0 +1,116 @@
+
+
+
+<section class="main-content sectionGrey">
+
+
+<h3>Previous Tasks</h3>
+
+Updates for current publication. <a href="https://github.com/modelearth/tweetdata">Status (Private Repo)</a><br><br>
+
+<ol>
+
+<li>
+ Loren - Filter out tweets that traverse distances greater than humanly possible. 
+Occurs when two users are logged into the same Twitter account at different locations.
+
+<!--
+During 2019 updates, a max of 5 tweets per day was added to remove users with displacements exceeding 200 km per day - within a 50 km max city area. Some of these frequent posting were from the same account logged into computers separated by over 40 km.)
+(This does not appear to be applied to radius of gyration.  Need to locate.)
+
+However, the 2014 Radii were limited to users whom posted at 5 or more locations in the 72-hour periods, so 
+number of Tweets can not be used to filter out two users logged in simultaneously.
+-->
+</li>
+
+<li>
+   Loren - Update initial displacement step low-end from 1 meters to 7.8 meters. 
+   (Check if other papers have alternatively used 8 meters from winter storm paper.)
+   Also output for 56 meters, the distance used in Yan's study for local movement.
+</li>
+
+<li>
+    Loren - Generate Radius of Gyration for minimum of 3 and 5 steps.
+    Initial study required 5 tweets within 72 hour period (3 days).
+    Generate bars in radius charts for 1 day and 3 days.
+    <!-- Also include 2 steps -->
+</li>
+<li>
+  Loren - Use kilometers for perturbation chart y-axis instead of lat/lon degrees to add clarity.
+
+  <!--
+  Longitude degrees are twice as far apart at the equator than they are New York and Tokyo. 
+
+  Using degrees causes locations near the equator to appear to have less perturbation since a person traveling longitudinally (east-west) near the equator goes about half the degrees of equivalent travel near latitudes further from the equator like Tokyo and New York.
+  -->
+</li>
+
+<li>
+  Loren - Compare cities using a proportional mix of displacement steps adding up to 100%. 
+  Compare a proportional mix before and after storms to allow for power outages.
+</li>
+
+<li>Loren - Include stationary (0 to 7.8 meters) in the proportional mix of step distances.</li>
+
+<li>
+  Ryan - Set up Python for PowerLaw graphs.
+</li>
+<li>
+  Ryan - Clarify how perturbation distance is effected by differing city sizes. Larger urban areas allow for greater fluctuations in displacement distance during storms. Greater fluctuations could cause larger percentage changes in displacement.
+</li>
+
+<li>
+  Loren and Chel - Filter out tweets by bots using API service.
+</li>
+
+
+
+</ol>
+
+
+<b>During storm impact, the perturbation of the following three travel steps was found to increase:</b><br><br>
+
+    Travel Step 1 (teal) &mdash; 1 to 100 meters: Typical of movement within a home or office<br>
+    Travel Step 4 (yellow) &mdash; 1 to 5 km: Local travel (like to a grocery store), but less than a work commute.<br>
+    Travel Step 6 (purple) &mdash; 10 km or more: Travel between cities (Unless resiliency breaks, as with Tacloban @ 184 mph)<br>
+
+    <!--
+    <h2>Loss of Resilience in Human Mobility<br>Under the Influence of Natural Disasters</h2>
+    -->
+
+    
+<div style="margin-left:55px">
+
+<h3>Percentage Change in Travel Distance (6 Steps)</h3>
+
+Change in displacement distance (in absolute lat/lon degrees). 
+Uses 6 discrete travel segments to compare 5-day norm and 1 day impact.
+</div>
+
+
+<img src="seaborn/img/stepdiff/diff.png" style="max-width:1200px"><br>
+
+<!--
+Displacement Diff within Steps - Similar, but not as pronounced
+<img src="seaborn/img/stepdiff/norm_impact_chart.png" style="max-width:1200px"><br>
+-->
+
+<div style="margin-left:55px">
+Travel steps: (1) 1-100m, (2) 100-500m, (3) 500m-1km, (4) 1-5km, (5) 5-10km, and (6) over 10km<br>
+<div style="font-size:10pt">
+In order to include Tacloban, the chart above includes displacement steps that originated after 5pm the prior day.
+</div>
+</div>
+
+
+<li style="display:none">
+	In the 2014 data, Rammasan was reported as 115 mph for Antipolo and 40 mph for adjacent Manila (<a href="cities.html">see map</a>). Manila airport reported a max of 20 mph according to <a href="https://earthobservatory.nasa.gov/images/84027/typhoon-rammasun-drenches-philippines">NASA</a>. Using Weather Underground we identified 40 mph as the maximum for Antipolo. 
+  The shape of bay may have funneled higher winds at Antipolo, but we have yet to find a source for higher wind speeds if they did occur. See <a href="http://model.earth/storms/">wind animation</a>.
+</li>
+
+<li>
+	In the 2014 storms, Nakagami, Japan was not in the path of Typhoon Phanfone so the wind speed used might not be accurate. Nakagami tweets were also low. In the recent update, Hamamatsu, Japan was therefore used for both Typhoon Phanfone (2014) and Typoon Lan (2017), which both had 90 mph winds on impact.
+</li>
+
+
+</section>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <title>Mobility Impact Charts - PoweRlaw</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="../css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="../css/github-light.css" media="screen">
+  </head>
+  <body>
+
+<!--
+    <section class="page-header">
+      <h1 class="project-name">Mobility Impact Charts</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.gatech.edu/lheyns3/TW-Charts" class="btn">View on GitHub</a>
+    </section>
+-->
+
+    <section class="main-content">
+    
+    <a href="../index.html">Overview</a> | 
+    <a href="../cities.html">Identify Data</a> | 
+    <a href="../process.html">Methodology</a> | 
+    <a href="../charts.html">Impact Charts</a>
+
+    <!--
+    <h2>Loss of Resilience in Human Mobility<br>Under the Influence of Natural Disasters</h2>
+    -->
+
+    <h2>PowerLaw</h2>
+
+    The truncated power-law distribution can be captured by the following equation:
+
+    Where Δr is the displacement, the scaling parameter (β), and the exponential cutoff (λ).
+    What's the terminolog for P(Δr).
+    And what's the precident for referring to the change in displacement as Δr rather than Δd?
+
+    Question:
+
+    How is the scaling parameter calculated?
+
+    How is the exponential cutoff value λ calculated?
+
+
+    When setting up the truncated power-law charts, please elaborate on how the scaling parameter (β) is determined, along with the exponential cutoff (λ) for each city.  
+
+    What's the terminology for P(Δr)? And what's the precedent for referring to the change in displacement as Δr rather than Δd?
+
+    Links to explore in 2016 Ryan Q paper: 
+    https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0147299#pone.0147299.ref044
+
+
+    
+
+
+    <!--
+    <h3>Perturbation Strength</h3>
+
+    The change in the distributions of displacements.<br><br>
+
+    We calculated the probability distribution for both the Impact Day (Dp) and a Normal Day (Ds), and let<br>
+
+    dE = [dE (1), dE (2),…, dE (dmax)] be Euclidean distance between the two distributions.<br><br>
+
+   
+    The following is the Displacement Distribution for Hurricane Sandy's impact on New York.<br>
+    Day 1 is 24 hours starting at 4pm on Oct. 29, 2012 (the day of impact).<br><br>
+
+    <img src="../ryan/sandy/S2-Displacement-Distribution.png" style="max-width:400px"><br><br>
+    -->
+
+    <h4>Distribution of displacements</h4>
+
+      <!--
+      R, but might use Python.
+
+      # fit a discrete power law to data using displ constructor
+      # m_pl = displ$new(moby)
+      # To infer model parameters, estimate the lower threshold
+      # est = estimate_xmin(m_pl)
+      # m_pl$setXmin(est)
+
+
+      Also (more verbose)
+      https://rdrr.io/cran/poweRlaw/src/inst/doc/b_powerlaw_examples.R
+      -->
+
+    scipy.stats.powerlaw - includes matplotlib.pyplot  
+    https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.stats.powerlaw.html#scipy.stats.powerlaw  
+
+    <a href="https://rdrr.io/cran/poweRlaw/f/README.md">poweRlaw package</a> - 
+    <a href="https://github.com/csgillespie/poweRlaw">R Language poweRlaw package - Colin S. Gillespie</a><br><br>
+
+    Multiple distribution graphs<br>
+    https://tryolabs.com/blog/2017/03/16/pandas-seaborn-a-guide-to-handle-visualize-data-elegantly/<br><br>
+
+    FacetGrid - Multiple charts in columns<br>
+    https://seaborn.pydata.org/generated/seaborn.FacetGrid.html<br><br>
+
+    FacetGrid - Structured multi-plot grids<br>
+    https://seaborn.pydata.org/tutorial/axis_grids.html#grid-tutorial<br><br>
+
+
+    <a href="https://pdfs.semanticscholar.org/eabf/c6e0765c2162f720119068059a8925d900c7.pdf">Multi-scale spatio-temporal analysis of human mobility</a><br><br>
+    <!--
+    Understanding individual human mobility patterns
+    https://www.nature.com/articles/nature06958#f1
+    -->
+
+
+    <h3>Storm Impact Summaries</h3>
+
+    <img src="../ryan/Figure4.png" class="figure"><br><br><br><br>
+
+
+    <h3>Powerlaw Examples</h3>
+
+    <img src="img/powerlaw-examples.png" class="figure"><br><br><br><br>
+    Source: Clauset, Aaron, Cosma Rohilla Shalizi, and Mark EJ Newman.<br>
+    "<a href="https://arxiv.org/pdf/0706.1062.pdf">Power-law distributions in empirical data</a>." SIAM review 51, no. 4 (2009): 661-703.<br><br>
+
+    
+        <!--
+    <a href="https://core.ac.uk/download/pdf/82018112.pdf">Resilience of human mobility under the influence of typhoons (2014)</a><br><br>
+
+    <a href="Multiple-Hurricanes-for-NHR-v5.0-with-Loren-Edits.docx">Loss of Resilience in Human Mobility Under the Influence of Natural Disasters (Word Doc)</a>
+    <br><br><br>
+    -->
+
+    Includes R Code for working through samples - suggested by<br>
+    https://www.stat.berkeley.edu/~aldous/Research/Ugrad/Willy_Lai.pdf<br><br>
+
+    <!--
+    Scientific notation:
+    1e+5 = 100,000
+    2e+5 = 200,000
+    -->
+
+    Overview of power-law packages (Matlab R, Python)<br>
+    http://archive.li/ASSa#selection-233.242-233.246<br><br>
+
+    Code in MatLab and R<br>
+    http://tuvalu.santafe.edu/~aaronc/powerlaws/<br><br>
+
+    Recommends steps for implementing (Matlab), R Language [Explore further]<br>
+    http://intersci.ss.uci.edu/wiki/index.php/Power-law_distributions<br><br>
+
+
+    <footer class="site-footer">
+      <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">TW-Charts</a> maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
+
+      <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+    </footer>
+
+    </section>
+
+  
+  </body>
+</html>

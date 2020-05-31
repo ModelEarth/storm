@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Capturing Twitter Data for PostgreSQL</title>
+  <link rel="icon" type="image/x-icon" href="../img/logo/favicon.png" />
+  <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+</head>
+
+<body style="margin:0px">
+
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+<section class="main-content">
+
+  <h1>Data Cature</h1>
+
+  <h2>PostgreSQL with Python</h2>
+
+  <p><a href="https://towardsdatascience.com/how-to-build-a-postgresql-database-to-store-tweets-1be9c1d48c7">how-to-build-a-postgresql-database-to-store-tweets</a></p>
+
+  <a href="https://github.com/ugis22/analysing_twitter">Related GitHub files - "Analysis of Twitter" by Euge Inzaugarat</a><br>
+
+  <p>
+  Internal notes:  
+  tweetdata/python/tweepy/  
+  </p>
+
+  <hr>
+
+  <h2>Amazon Kinesis to Collect, Process and Analyze in Real-time</h2>
+
+  Amazon Kinesis (SQL Analytics) makes it easy to collect, process, and analyze real-time, streaming data. Alternative to more complex offerings such as Apache Storm and Apache Spark Streaming.<br><br>
+
+  <a href="https://aws.amazon.com/kinesis/">Amazon Kinesis</a><br>
+
+  <hr>
+
+
+  <h2>Spark Databricks with Kafka Data Capture<br>using Google Cloud Platform (GPC)</h2>
+
+
+
+<a href="https://towardsdatascience.com/how-to-capture-and-store-tweets-in-real-time-with-apache-spark-and-apache-kafka-e5ccd17afb32">Spark Databricks Tweet Capture</a><br><br>
+
+  Spark Databricks provides SQL access (alternative to large amount of data in PostgreSQL). Databricks Platform allows one to create a free Spark-Scala cluster.<br>
+
+
+  <p>Add a project in an approved 
+  <a href="https://developer.twitter.com">Twitter developer account</a> to get:</p>
+
+  <p>Four keys: Consumer API key, API secret key, Access token, Access token secret</p>
+
+  <p>Use the <a href="https://community.cloud.databricks.com/">free community edition</a> of DataBricks - Create a notebook set to scala (ex. 
+    <a href="https://community.cloud.databricks.com/?o=3273786278931870#notebook/3461646623227707/command/3461646623227708">Twitter Southeast</a>)</p>
+
+  <p>Click: "Clusters > Create Cluster" and name it cluster1</p>
+
+  <p>Wait a couple minutes for the cluster to appear in the Clusters list.
+  Click the 3-dot menu and choose "Libraries > Install New"</p>
+
+  <p>Downloaded 2.4.3 of spark-streaming-kafka-0-10_2.11 (get latest)
+  https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-kafka-0-10_2.11/</p>
+
+  <p>Downloaded 1.6.3 spark-streaming-twitter_2.11 (get latest)
+  https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-twitter_2.11/</p>
+
+
+ 
+
+  <hr>
+
+  <h2>AWS Managed Streaming for Apache Kafka</h2> 
+
+  <p>Amazon Managed Streaming for Apache Kafka (MSK) – Generally Available as of May 2019 (includes Apache ZooKeeper)
+  https://aws.amazon.com/blogs/aws/amazon-managed-streaming-for-apache-kafka-msk-now-generally-available/</p>
+
+  <p>"Apache Kafka (Kafka) is an open-source platform that enables customers to capture streaming data like click stream events, transactions, IoT events, application and machine logs, and have applications that perform real-time analytics, run continuous transformations, and distribute this data to data lakes and databases in real time."</p>
+
+  <p>Next, Create a Cluster in Amazon Managed Streaming for Apache Kafka (<a href=" https://console.aws.amazon.com/msk/">MSK</a>)</p>
+ 
+  Yikes, MSK pricing says $0.21 per hour!  But it's not clear if a small dataset would be less.
+
+
+
+</section>
+
+</body>
+</html>

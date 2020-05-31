@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <title>Mobility Impact Charts - City-Scale detection of storm effects on daily displacement and radius of gyration</title>
+    <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="https://zeptojs.com/zepto.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+
+    <style>
+        .iframeEmbed {
+            display: block; /* iframes are inline by default */
+            width:105%;
+            min-height: 555px; /* Space for lowest popup */
+            margin-right: 60px;
+            border: 0px;
+        }
+        .sectionGrey {
+            background: #fafafa;
+        }
+        .main-content { /* override default */
+            margin-left:0px;
+            width:100%;
+            max-width: 100%;
+        }
+        .roundedButton {
+            border:1px solid #ccc;
+            border-radius: 24px;
+            padding: 4px 6px 4px 6px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            background-color: #ddd;
+            width: 100px;
+            float:left;
+            text-align: center;
+        }
+        .roundedButton:hover {
+            background-color: #eee;
+        }
+        .selectedButton {
+            background-color: #fff;
+            border:1px solid #777;
+        }
+        #segmentDayCount {
+            cursor: pointer;
+            background-color: #fff;
+        }
+        .selectMenu {
+            height:32px;
+            font-size: 14px;
+        }
+    </style>
+
+  </head>
+  <body>
+
+<!--
+<section class="page-header">
+  <h1 class="project-name">Mobility Impact of Storms</h1>
+  <h2 class="project-tagline"></h2>
+  <a href="https://github.gatech.edu/lheyns3/TW-Charts" class="btn">View on GitHub</a>
+</section>
+-->
+
+<section class="main-content topnavbar">
+    <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
+    <a href="./">Overview</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+<div class="spaceAtTop">
+</div>
+
+<section class="main-content">
+    <h1>Mobility Impact Charts</h1>
+
+    Project Objective: Assess the degree to which the maximum sustained wind speed on the day of storm impact 
+    correlates with mobility pattern changes (daily displacement and <a href="#gyration">radius of gyration</a>) 
+    using geotagged Twitter <!--social media--> posts. 
+    <!--
+    Our conjecture is that when hurricanes/typhoons reach a certain threshold, the mobility-wind speed curve starts to behave non-linearly (or more non-linearly).  In other words, there is a threshold after which mobility begins to be destroyed beyond an ability to bounce back (to use a resilience term).
+    -->
+
+    <!--
+    <br><br>
+    <a href="#gyration">Radius of Gyration</a>
+    -->
+
+</section>
+
+
+<section class="main-content" style="padding-top:10px">
+
+    <h2>Perturbation Strengths</h2>
+
+    <h3>Impact of Wind on Tweet Displacement Distances</h3>
+
+    <iframe src="regression/index.html" class="iframeEmbed"></iframe>
+
+    <h2>Radius of Gyration</h2>
+
+    <iframe src="regression/gyration.html" class="iframeEmbed"></iframe>
+
+    
+</section>
+
+
+
+
+<a name="gyration"></a>
+
+<section class="main-content sectionGrey">
+
+    <script>
+    var numberStopsPrior = 2;
+    $(document).ready(function () {
+        $('#buttonDivs > div').click(function () {
+            $('#buttonDivs > div').removeClass('selectedButton');
+            $(this).addClass('selectedButton');
+
+            var segmentDayCount = $('#segmentDayCount').val();
+            refreshGyrationChart($(this).html().substr(0,1), segmentDayCount);
+            event.stopPropagation();
+        });
+        $('#normalized').on('change', function() {
+            var segmentDayCount = $('#segmentDayCount').val();
+            refreshGyrationChart(0, segmentDayCount);
+        });
+        $('#segmentDayCount').on('change', function() {
+            refreshGyrationChart(0, this.value );
+        });
+    });
+
+    function refreshGyrationChart(numberStops,segmentDayCount) { // refresh search results
+        //alert(numberStops);
+        var columnCount = 4;
+        var normalized = $('#normalized').val();
+        if (numberStops == 0) {
+            numberStops = numberStopsPrior;
+        }
+        if (segmentDayCount == 1) { columnCount = 2; }
+
+        // TEMP
+        if (segmentDayCount == 3 && normalized == "-normalized") {
+            normalized = "";
+        }
+        var path = "seaborn/img/gyration/" + segmentDayCount + "day/radius-gyration-" + segmentDayCount + "day-" + numberStops + "locations-" + columnCount + "columns" + normalized + ".png";
+        $('#gyrationImage').attr("src",path);
+        numberStopsPrior = numberStops;
+    }
+    </script>
+
+    <h2>Radius of Gyration - Cities</h2>
+
+    <div style="max-width:1000px">
+        <p>Radius of Gyration in kilometers for individuals moving between their Twitter posts. 
+
+            <span style="white-space:nowrap">Zero indicates the day of storm impact.</span>
+
+        </p>
+        <div id="buttonDivs" style="float:left">
+            <div class="roundedButton selectedButton">2+ locations</div>
+            <div class="roundedButton">3+ locations</div>
+            <div class="roundedButton">5+ locations</div>
+        </div>
+        <div style="float:right">
+            <select id="normalized" class="selectMenu">
+                <option value="-normalized">Normalized</option>
+                <option value="">Kilometers</option>
+            </select>
+            <select id="segmentDayCount" class="selectMenu">
+                <option value="1">1 day segments</option>
+                <option value="3">3 day segments</option>
+            </select>
+        </div>
+        <div style="clear:all"></div>
+    </div><br>
+    <div style="font-size: 10px; clear:both; margin-top:10px">
+    * Normalized images have not yet been added for 3-day segments, nor 5+ locations.
+    </div>
+    <br>
+
+    <!-- 
+
+    "all_gyration_3day" table is generated by tweetdata/sql/all_33.md
+    -->
+    <img id="gyrationImage" src="seaborn/img/gyration/1day/radius-gyration-1day-2locations-2columns-normalized.png" style="max-width:1140px"><br>
+    <div style="font-size: 11px">
+    A single pixel line on the 0 y-value indicates no movement data for the day for the selected number of stop minimum (2, 3 or 5 stops).<br>
+    For some days there is no data due to data collection outages.
+    <!--The data above is prepared with the tweetdata/sql/all_33.md SQL Script.-->
+
+    <br><br>
+    </div>
+    <br>
+
+    <h2>Radius of Gyration - Tacloban</h2>
+
+    <b>Scale of y-axis changed from 40 to 4 km to show more detail for Tacloban, which has an 11 km radius.</b><br><br>
+
+    <img src="seaborn/img/gyration/1day/radius-gyration-1day-2locations-1columns-tacloban.png" style="max-width:1140px"><br>
+
+    <div style="font-size: 11px">
+    Tacloban chart (2+ stops):
+    The current Seaborn graph process requires setting the radius to 0<br>
+    which produces a line 
+    regardless of whether there is any movement data for the day.<br><br>
+    </div>
+
+    <a href="gyration" style="font-size:12px">More Radius of Gryation Charts</a>
+
+    <!--
+    <h2>Changes of Total Displacements</h2>
+    <img src="ryan/Figure2.jpg" class="figure"><br><br>
+
+    When the strength of perturbation was relatively low, i.e. in the cases of Tokyo, Okinawa, and Manila, there was a clear trend that people increased their short-distance travels and reduced their long-distance travels.<br><br>
+
+    However, when tropical cyclones were impacting an urban area with strong winds, the changes started to become more chaotic. This second pattern could be observed in the cases of Cebu, Antipolo, Calasiao, and Nakagami. Changes happened at all distances and there were no clear, distinguishable patterns, although it was observed that the magnitudes of changes increased with the growth of d<sub>E</sub>. 
+
+
+    <br><br>
+
+    <h2>Changes in Displacements at Different Ranges</h2>
+    (1) 1-100m, (2) 100-500m, (3) 500m-1km, (4) 1-5km, (5) 5-10km, and (6) over 10km<br><br>
+    <img src="ryan/Figure3.jpg" class="figure"><br><br>
+    -->
+    <!--
+    Norm in original was day -14 to day -7 but our new study had incomplete data collection, so we used a 5-day norm 
+    of weekdays. Ryan suggested using weekdays. 
+    -->
+
+
+    <br clear="all"><br><br>
+
+
+    <h3>Calculating Distance on the Earth's Spherical Surface</h3>
+
+    
+
+    <span>The angles of a triangle are more than 180° when applied to a sphere.</span><br><br>
+
+    <img src="charts/img/radius-gyration-earth.png"><br><br>
+    
+
+    <h3>Radius of Gyration on a 2D surface:</h3>
+    <img src="charts/img/radius-gyration-2D.png"><br>
+
+    <h3>Radius of Gyration on 3D surface:</h3>
+
+    <b>Haversine Formula</b> (Robusto 1957) <br><br>
+
+    <img src="charts/img/haversine-formula.png" style="width:100%;min-width:500px;max-width:500px"><br><br>
+
+    In PostgreSQL, the distance between two points on earth in kilometers can be calculated using ST_DistanceSphere:<br><br>
+
+    <pre>displacement = ST_DistanceSphere(prior_geom, the_geom)/1000</pre>
+
+    ST_DistanceSphere is equivalent to the following implementation of the Haversine Formula (with less than 1 meter variance):<br><br>
+
+<pre>displacement_haversine = 2 * 6371 * asin(sqrt((sin(radians((latitude - prior_latitude) / 2))) ^ 2 
++ cos(radians(prior_latitude)) * cos(radians(latitude)) * (sin(radians((longitude - prior_longitude) / 2))) ^ 2))</pre>
+
+    
+
+    <!--
+    SELECT 
+    2 * 6371 * asin(sqrt((sin(radians((latitude - prior_latitude) / 2))) ^ 2 
+                        + cos(radians(prior_latitude)) * cos(radians(latitude)) 
+                        * (sin(radians((longitude - prior_longitude) / 2))) ^ 2)) displacement_hav,
+    ST_DistanceSphere(prior_geom,the_geom)/1000 distancesphere,
+    ST_Distance(prior_geom::geography,the_geom::geography)/1000 displacement,
+    ST_3DDistance(prior_geom,the_geom) * 100 st_3ddistance -- There may be a more exact constant than 100.
+    from public.harvey_houston 
+    where displacement > 0 limit 10
+
+    Run to update:
+    update harveyedgar_copy set displacement = ST_DistanceSphere(prior_geom,the_geom)/1000
+    -->
+
+    <a href="extra.html" style="font-size:12px">Extra Charts</a>
+
+</section>
+
+
+
+<section class="main-content" style="display:none">
+
+    <h2>Human Mobility Distributions</h2>
+
+    <b>Distribution of displacements</b><br><br>
+
+    <a href="https://github.com/csgillespie/poweRlaw">R Language poweRlaw package - Colin S. Gillespie</a><br><br>
+
+    <a href="https://pdfs.semanticscholar.org/eabf/c6e0765c2162f720119068059a8925d900c7.pdf">Multi-scale spatio-temporal analysis of human mobility</a><br><br>
+
+    <a href="r-powerlaw/index.html">Powerlaw Details</a><br><br>
+
+
+    <img src="ryan/Figure4.png" class="figure"><br><br><br><br>
+
+
+
+    <br><br>
+
+</section>
+
+<section class="main-content">
+    <footer class="site-footer">
+      <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">TW-Charts</a> is maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
+
+      <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+    </footer>
+
+</section>
+
+  
+  </body>
+</html>

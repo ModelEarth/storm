@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<head>
+  <title>Wind Regression Line</title>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <link rel="icon" type="image/x-icon" href="../img/logo/favicon.png" />
+  <meta charset="utf-8">
+  <style>
+      body {
+          font: 10px sans-serif;
+      }
+      svg {
+        margin-bottom: 50px;
+      }
+      .pagebreak {
+        page-break-after: always;
+      }
+      .label {
+        font-size: 12px;
+      }
+      .axis path,
+      .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+      }
+      .title {
+        font: 16px sans-serif;
+      }
+      .point {
+        font: 2px sans-serif !important; /* no effect */
+          fill: transparent;
+      }
+      .goodpoint {
+          stroke: steelblue;
+      }
+      .badpoint {
+          stroke: red;
+      }
+
+      div.tooltip {
+        position: absolute;
+        text-align: center;
+        width: 60px;
+        height: 28px;
+        padding: 2px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
+      }
+  </style>
+</head>
+<body>
+
+<div id="chart1"></div>
+<div class="pagebreak">&nbsp;</div>
+
+<div id="chart2"></div>
+<div class="pagebreak">&nbsp;</div>
+
+<div id="chart3"></div>
+<div class="pagebreak">&nbsp;</div>
+
+<div id="chart4"></div>
+<div class="pagebreak">&nbsp;</div>
+
+<div id="chart5"></div>
+<div class="pagebreak">&nbsp;</div>
+
+
+<script src="js/d3.v5.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="js/d3-legend.min.js"></script>
+
+<!-- Temp for line - hides axis -->
+<link rel="stylesheet" type="text/css" href="../../graphs/regression/css/style.css"/>
+
+
+<script>
+    var parentId = "#chart2";
+    var animDuration = 1000;
+
+    var div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    var margin = {top: 20, right: 20, bottom: 50, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var xScale = d3.scaleLinear()
+      .range([0,width]);
+
+    var yScale = d3.scaleLinear()
+      .range([height, 0]);
+
+
+
+    // BUGBUG - This flips y axis and hides x axis
+    // For regression line
+    //var xAxis = d3.axisBottom(xScale).tickFormat(function(d){ return d.x;});
+    //var yAxis = d3.axisLeft(yScale);
+
+    var line = d3.line()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .curve(d3.curveLinear); // Use for clarity, omit for brevity.
+
+    // parse the date / time - MIGHT NOT BE IN USE
+    var parseTime = d3.timeParse("%d-%b-%y");
+    var formatTime = d3.timeFormat("%e %B");
+
+
+    var formatPercent = d3.format(".0%");
+
+    var x = d3.scaleLinear()
+        .range([0, width]);
+
+    var y = d3.scaleLinear()
+        .range([height, 0]);
+
+
+    
+
+
+    var ordinal = d3.scaleOrdinal()
+      .domain(["30-400m", "400m-1km", "1-5km", "5-10km", "10-50km", "over 50km"])
+      .range(["#7479BC","#7C2833","#E7AC37","BDE7AE","E17250","ECF809","FC6E61"]);//Ffb400
+      //.range([ "rgb(153, 107, 195)", "rgb(56, 106, 197)", "rgb(93, 199, 76)", "rgb(223, 199, 31)", "rgb(234, 118, 47)", "rgb(234, 47, 47)"]);
+
+
+    var svg1 = d3.select("#chart2").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g") // main grouping element g
+        // Transform into the middle of the svg
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    /*
+      Feature 10 (Wins and nominations) vs. Feature 6 ( Rating)
+      Figure title: Wins+Nominations vs. Rating
+      X axis (horizontal) label: Rating
+      Y axis (vertical) label: Wins+Noms
+
+      Feature 8 (Budget) vs. Features 6 ( Rating)
+
+      Figure title: Budget vs. Rating
+      X axis (horizontal) label: Rating
+      Y axis (vertical) label: Budget
+    */
+
+    var allData;
+    d3.csv("../charts/data/perturbation-discrete-6-steps.csv")
+    .then(function(data) { // Promise structure, new to D3 v5.
+        allData = data;
+
+
+
+        // For regression line
+        /*
+        var xAxis = d3.svg.axis()
+          .scale(xScale)
+          .tickSize(-height)
+          .tickPadding(8)
+          .tickFormat(d3.round)
+          .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .tickSize(-width)
+            .tickPadding(8)
+            .orient("left");
+        
+        var xRange = d3.scaleLinear()
+        .domain([data.min,data.max]).range([40, 360]);
+
+        var yRange = d3.scaleLinear()
+        .domain(y_domain).range([360, 40]);
+
+        
+        */
+
+        
+
+        // End for regression line
+
+
+        scatterplotChart(data,svg1);
+
+        $( document ).ready(function() {
+          //updateChart("Count","Rating");
+          updateChart("wind_mph","change_displacement_percent");
+        });
+    });
+
+</script>
+
+<script src="js/regression.js"></script>
+
+<script>
+
+
+
+function scatterplotChart(data,svg) {
+
+      data.forEach(function(d) {
+        d.date = parseTime(d.cityimpactday);
+
+        d.year = +d.year;
+
+        // Change strings to numbers  --- Also change above.
+        d.x = +d.wind_mph; // x axis
+        d.y = +d.change_displacement_percent; // y axis
+        //d.y = +d.change_step_displacement_percent;
+      });
+
+        // Set domain range for each axis scale. 
+        // .nice ensures they start and end at nice values.
+
+        x.domain(d3.extent(data, function(d) { return d.x; })).nice();
+        y.domain(d3.extent(data, function(d) { return d.y; })).nice();
+
+        // Add the x-axis.
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x)); // Previous to v5: .call(d3.svg.axis().scale(x).orient("bottom"))
+
+        // Add the y-axis.
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(d3.axisLeft(y).tickFormat(d => d + "%"));
+
+    
+
+
+      /*
+      var svg = d3.select("svg");
+      */
+      svg.append("g")
+        .attr("class", "legendOrdinal")
+        .attr("transform", "translate(800,20)");
+
+
+      /*
+      var legendOrdinal = d3.legendColor()
+        .shape("path", d3.symbol().type(d3.symbolCircle).size(100)())
+        .shapePadding(10)
+        //use cellFilter to hide the "e" cell
+        //.cellFilter(function(d){ return (d.step_type !== "1" && d.step_type !== "2" && d.step_type !== "3" && d.step_type !== "4" && d.step_type !== "5") })
+        .scale(ordinal);
+
+      svg.select(".legendOrdinal")
+        .call(legendOrdinal);
+      */
+
+      svg.append('text') // X-axis Label
+      .attr('class','label')
+      .attr('y',height-16)
+      .attr('x',width)
+      .attr('dy','.71em')
+      .style('text-anchor','end')
+      .text('Wind Speed (MPH)');
+
+    // Title
+    svg.append("text")             
+      //.attr("transform", "translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+      .attr("class", "title")
+      //.attr('y',0) // At top
+      .attr('y',height+50)
+      .attr('x',width/2)
+      .style("text-anchor", "middle")
+      .text("Correlation of Wind Speed to Change in Daily Travel Distance");
+
+    /*
+    // text label for the y axis
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Change in Travel Distance (Percentage)");
+    */
+
+    // Chart label for the x axis
+    svg.append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 10)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Percentage Change");
+
+
+    // Add the points!
+    svg.selectAll(".point")
+        .data(data)
+        .enter().append("path")
+
+
+          //.attr("class", "point")
+          .attr("classXX", function(d) {
+            if (d.IsGoodRating == "1") {
+              return "point goodpoint"; 
+            } else {
+              return "point badpoint"; 
+            }
+          })
+
+          .style("fill", function (d) { 
+
+            if (d.year > 2014) {
+              return "blue";
+            } else {
+              return "red";
+            }
+
+          })
+
+          //.style("fill", function(d) { return color(cValue(d));}) 
+
+          /*
+          .attr('fill',function (d,i) { 
+
+            return '#333' 
+
+          })
+          */
+
+          .on("mouseover", function(d) {
+             div.transition()
+               .duration(200)
+               .style("opacity", .9);
+               // was formatTime(d.date)
+             div.html(d.city + "<br/>" + d.year)
+               .style("left", (d3.event.pageX) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+             })
+           .on("mouseout", function(d) {
+             div.transition()
+               .duration(500)
+               .style("opacity", 0);
+          })
+
+          // No effect, from v3
+          /*
+          .on('mouseover', function () {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('r',20)
+              .attr('stroke-width',3)
+          })
+          .on('mouseout', function () {
+            d3.select(this)
+              .transition()
+              .duration(500)
+              .attr('r',10)
+              .attr('stroke-width',1)
+          })
+          */
+
+          // About symbols: https://github.com/d3/d3-shape/blob/master/README.md#symbol
+          .attr("d", d3.symbol().type( // Prior to v5: .type("triangle-up")
+            function(d) { 
+              if (d.IsGoodRating == "1") {
+                return d3.symbolCross;
+              } else {
+                return d3.symbolCircle;
+              }
+            }
+          ))
+          .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+}
+</script>
+</body>
