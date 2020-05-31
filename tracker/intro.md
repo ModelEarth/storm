@@ -1,7 +1,5 @@
 <h1 style="font-size:24px">Storm Tracker</h1>
 
-## Current Conditions
-
 [Atlantic](https://earth.nullschool.net/#current/wind/surface/level/orthographic=-50.31,33.81,913) | 
 [India](https://earth.nullschool.net/#current/wind/surface/level/orthographic=71.99,20.54,913) |
 [Austrailia](https://earth.nullschool.net/#current/wind/surface/level/orthographic=139.88,-21.78,913)<br>

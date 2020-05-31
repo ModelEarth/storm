@@ -10,6 +10,7 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+    <link rel="stylesheet" href="../../../community/css/community.css" />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
   integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
@@ -24,7 +25,8 @@
 
 <section class="main-content topnavbar">
     <a href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
-    <a href="./">Overview</a> | 
+    <a href="../tracker/">Storm Tracker</a> | 
+    <a href="./">Mobility Impact</a> | 
     <a href="charts">Storm Stats</a> | 
     <a href="cities.html">City Boundaries</a> | 
     <a href="process.html">Data Processing</a> | 
@@ -34,75 +36,9 @@
 <div class="spaceAtTop">
 </div>
 
-    <section class="main-content" style="display:none">
-
-      <h1>Identify Data</h1>
-
-      To reproduce and add to the 2013-2014 <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> impact charts,<br>
-      we have several factors to determine:<br><br>
-
-      A. How is the city footprint defined?<br>
-      B. Are travel steps that originate outside the city included?<br>
-      C. What are the boundaries for steps starting/ending outside the city?<br>
-
-
-      <h3>A. Determine radius matching each urban area</h3>
-
-      <ol>
-      <li>Select the latitude and longitude returned by a Google search of the city, state and country following by "latitude and longitude".</li>
-
-      <li>Adjust the radius to create a circle that surrounds the city borders displayed on a Google Map.</li>
-
-      <li>Round up to an integer that surrounds the city.</li>
-
-      <li>Set the maximum at 50km to adjust for cities like Tokoyo  
-      for which Google assigns a center point in the downtown area, rather than the center of the bounded area.</li>
-
-      <li>When two city circles overlap due to offset center point, shift the center point. (See: Manila and Antipolo below.)</li>
-
-      <li>Enter the integer value in the <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> 
-      Google Sheet to set storm impact analysis parameters for import into Postgresql.</li>
-      </ol>
-
-      <h3>B. Are travel steps that originate outside the city included?</h3>
-
-      Based on the length of the long travel steps in the original study, we can assume that a large surrounding area needs to be included.<br><br>
-      
-      Since steps leaving the city area were included, we have also included steps that originated outside the city, such as those of 
-      commuters traveling into the city.<br><br>
-
-      The radius of gyration calculation includes all Twitter posts made by each individual for each day they enter the city. 
-      This include posts made prior to the entering the city, even if the user did not move between each prior post.
-      <br>
-
-      <h3>C. What are the boundaries for the area outside the city?</h3>
-
-      We used the entire country in a bounding rectangle as the external boundary for midsize countries. 
-      For larger countries, like the United States and China, 
-      we used a region of the country within a bounding rectangle.<br><br>
-
-      Country of Philippines<br>
-      Country of Japan<br>
-      Southeast USA and Caribbean<br>
-      Southeast China<br><br>
-
-      Country Bounding Boxes were provided by the following <a href="https://gist.github.com/graydon/11198540">country bounding box coordinates</a>.<br><br>
-
-      These boundaries allow us to bin (crop) the long distance travel steps to a manageable level for our pre-processing queries.  
-      <!--
-      For example, running a postgresql query on 20 million Twitter records in Japan for Sept-Oct 2014 took over 1 week. 
-      (This time might be reduced by running a postgresql vacuum first. Avoid a Full vacuum since it blocks queries on all tables.)--><br><br>
-
-      We considered simply using a 50km radius for all cities, however the original 2013-2014 study contained two cities within 17km (Manila and Antipolo).
-      <hr>
-
-</section>
-
-
-
 <section class="main-content">
 
-      <h2>City Boundaries</h2>
+      <h1>City Boundaries</h1>
 
       Each city boundary is centered on the lat/lon provided by a Google search.<br><br>
 
@@ -498,13 +434,79 @@
       <br>
 
 
-      <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">Mobility Page</a> maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
-
-        <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
-      </footer>
 
     </section>
+
+
+
+    <section class="main-content localX" style="displayX:none">
+
+      <h1>About City Boundary Areas</h1>
+
+      To reproduce 2013-2014 <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> impact charts, several factors had to be determined:<br><br>
+
+      A. How is the city footprint defined?<br>
+      B. Are travel steps that originate outside the city included?<br>
+      C. What are the boundaries for steps starting or ending outside the city?<br>
+
+
+      <h3>A. Determine radius matching each urban area</h3>
+
+      <ol>
+      <li>Select the latitude and longitude returned by a Google search of the city, state and country following by "latitude and longitude".</li>
+
+      <li>Adjust the radius to create a circle that surrounds the city borders displayed on a Google Map.</li>
+
+      <li>Round up to an integer that surrounds the city.</li>
+
+      <li>Set the maximum at 50km to adjust for cities like Tokoyo  
+      for which Google assigns a center point in the downtown area, rather than the center of the bounded area.</li>
+
+      <li>When two city circles overlap due to offset center point, shift the center point. (See: Manila and Antipolo below.)</li>
+
+      <li>Enter the integer value in the <a href="https://docs.google.com/spreadsheets/d/1HG2_PjOiSQZvR4WgyjQ64L-rWLT28na8BKug1_rz1hs/edit#gid=0" target="_stormDoc">tropical storm</a> 
+      Google Sheet to set storm impact analysis parameters for import into Postgresql.</li>
+      </ol>
+
+      <h3>B. Are travel steps that originate outside the city included?</h3>
+
+      Based on the length of the long travel steps in the original study, we can assume that a large surrounding area needs to be included.<br><br>
+      
+      Since steps leaving the city area were included, we have also included steps that originated outside the city, such as those of 
+      commuters traveling into the city.<br><br>
+
+      The radius of gyration calculation includes all Twitter posts made by each individual for each day they enter the city. 
+      This include posts made prior to the entering the city, even if the user did not move between each prior post.
+      <br>
+
+      <h3>C. What are the boundaries for the area outside the city?</h3>
+
+      We used the entire country in a bounding rectangle as the external boundary for midsize countries. 
+      For larger countries, like the United States and China, 
+      we used a region of the country within a bounding rectangle.<br><br>
+
+      Country of Philippines<br>
+      Country of Japan<br>
+      Southeast USA and Caribbean<br>
+      Southeast China<br><br>
+
+      Country Bounding Boxes were provided by the following <a href="https://gist.github.com/graydon/11198540">country bounding box coordinates</a>.<br><br>
+
+      These boundaries allow us to bin (crop) the long distance travel steps to a manageable level for our pre-processing queries.  
+      <!--
+      For example, running a postgresql query on 20 million Twitter records in Japan for Sept-Oct 2014 took over 1 week. 
+      (This time might be reduced by running a postgresql vacuum first. Avoid a Full vacuum since it blocks queries on all tables.)--><br><br>
+
+      We considered simply using a 50km radius for all cities, however the original 2013-2014 study contained two cities within 17km (Manila and Antipolo).
+      <hr>
+
+</section>
+
+<footer class="site-footer">
+  <span class="site-footer-owner"><a href="https://github.gatech.edu/lheyns3/TW-Charts">Mobility Page</a> maintained by <a href="https://github.gatech.edu/lheyns3">lheyns3</a></span>
+
+  <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+</footer>
 
   
   </body>
