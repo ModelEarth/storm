@@ -1,0 +1,214 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Storms</title>
+<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script type="text/javascript" src="js/showdown.min.js"></script>
+
+<script type="text/javascript" src="//d3js.org/d3.v3.js"></script>
+<script type="text/javascript" src="js/nouislider.min.js"></script>
+<link rel="stylesheet" href="css/community.css" />
+<link rel="stylesheet" href="css/nouislider.min.css" />
+
+
+<script type="text/javascript">
+window.onload=function(){
+  
+var resizable = d3.select('#resizable');
+var resizer = d3.select('#resizer');
+var iframe = d3.select('.iframe');
+
+// To investigate further:
+// window.addEventListener("touchstart", func, {passive: true} );
+// Console warning message occurs in Chrome mobile view: Using passive event handlers #35
+// https://github.com/d3/d3-drag/issues/35
+
+var dragResize = d3.behavior.drag()
+.on('drag', function() {
+  // Determine resizer position relative to resizable (parent)
+  x = d3.mouse(this.parentNode)[0];
+
+  // Avoid negative or really small widths
+  x = Math.max(50, x);
+
+  resizable.style('width', x + 'px');
+
+  iframe.style('pointer-events','none');
+  consoleLog('resizinc2');
+  
+})
+.on('dragend', function() {
+  iframe.style('pointer-events','auto');
+  consoleLog('done');
+})
+
+resizer.call(dragResize);
+
+}
+
+function consoleLog(text)
+{
+    console.log(text);
+}
+
+
+
+    // tell the embed parent frame the height of the content
+    /*
+    if (window.parent && window.parent.parent){
+      window.parent.parent.postMessage(["resultsFrame", {
+        height: document.body.getBoundingClientRect()e.height,
+        slug: "e38bLdjk"
+      }], "*")
+    }
+    */
+
+
+loadMarkupPage("intro.md", "introDiv", "mainframe");
+
+var url = "marvel/index.html";
+window.onclick = function(e) { 
+  //alert("e.target.target " + e.target.target + " e.target " + e.target);
+  if (e.target.target == "mainframe") {
+    url = e.target; // Might place in a cookie for backing up. Then _blank can be switched to _parent
+    document.getElementById("iframeInTab").href = url;
+  }
+};
+
+function loadMarkupPage(pagePath, divID, target) {
+    d3.text(pagePath, function(data) {
+      var converter = new showdown.Converter(),
+      html = converter.makeHtml(data);
+      document.getElementById(divID).innerHTML = html;
+
+      //setTimeout(function(){ 
+        var elems = document.getElementById(divID).getElementsByTagName('a');
+        for (var i = 0; i < elems.length; i++) {
+          // <!--target seems to be encrypted
+          if (elems[i].text.includes("Concept") || elems[i].text.includes("American") || elems[i].text.includes("Additional") 
+            || elems[i].text.includes("Google") || elems[i].text.includes("GitHub") || elems[i].text.includes("Brain") || elems[i].text.includes("GPU.js") || elems[i].text.includes("11 JavaScript")) {
+            //alert('here')
+            elems[i].setAttribute('target', "_blank");
+          } else {
+            elems[i].setAttribute('target', target);
+          }
+        }
+      //}, 1000);
+    });
+}
+
+
+function viewInTab() {
+  //alert(url)
+   //url = document.getElementById('mainframe').src;
+   window.location.href = url;
+ }
+
+
+$(document).ready(function () {
+   
+    // Slider: https://refreshless.com/nouislider/
+    // Also dot style: https://jsfiddle.net/leongersen/9hyfv0bw/11/
+
+    // Also see: Preact Slider https://codepen.io/avol/pen/LyovJb
+
+    var pipsSlider = document.getElementById('slider-pips');
+
+    noUiSlider.create(pipsSlider, {
+        range: {
+            min: 0,
+            max: 24
+        },
+        start: [12],
+        pips: {mode: 'count', values: 9}
+    });
+
+    var pips = pipsSlider.querySelectorAll('.noUi-value');
+
+    function clickOnPip() {
+        var value = Number(this.getAttribute('data-value'));
+        pipsSlider.noUiSlider.set(value);
+    }
+
+    for (var i = 0; i < pips.length; i++) {
+
+        // For this example. Do this in CSS!
+        pips[i].style.cursor = 'pointer';
+        pips[i].addEventListener('click', clickOnPip);
+    }
+});
+
+</script>
+
+<style>
+  h1 {
+    margin: 0px;
+    margin-bottom: 10px;
+  }
+  h3 {
+    margin: 0px;
+  }
+
+  #slider-pips {
+    position: absolute;
+    right:20px;
+    bottom:38px;
+    min-width: 300px;
+    background-color: rgba(0,0,0,.5);
+    height:12px;
+  }
+
+  .noUi-marker-horizontal.noUi-marker-large {
+    height: 10px;
+    opacity: .8;
+    margin-top: -4px;
+  }
+  .noUi-marker-normal {
+    display:none;
+  }
+  .noUi-handle {
+    background-colorX: rgba(256,256,256,.9);
+  }
+</style>
+</head>
+
+
+<body>
+
+<div id="resizable" style="margin:20PX 0 0 40px;">
+  <!--
+  <a href="/"><img class="headerLogo" src="/community/hubs/img/planet.live.png" style="height:40px" /></a>
+  -->
+  
+  <div id="introDiv"></div>
+  <div id="resizer"></div>
+</div>
+
+<div id="mainarea">
+  <!--
+    https://earth.nullschool.net/#2014/10/05/2100Z/wind/surface/level/grid=on/orthographic=137.7261,34.7108,1269/loc=137.7261,34.7108
+  -->
+  <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-50.31,33.81,913" class="iframe" name="mainframe" id="mainframe"></iframe><br>
+  <div style="position:absolute; bottom:0px">
+    <!--
+    Embedded content. Scroll within iFrame above.
+    -->
+
+    <!--
+    <a href="#" id="iframeInTab">Expand</a>
+    <br><br>
+    -->
+    
+    <!--
+     or <a href="" class="opentab">view in new tab</a>.
+      -->
+  </div>
+</div>
+
+<div id="slider-pips"></div>
+
+</body>
+</html>
