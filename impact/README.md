@@ -1,4 +1,4 @@
-# TW-Charts
+# Storm Impact Repo
 
 
-[View Site](https://github.gatech.edu/pages/lheyns3/TW-Charts/)
+[Prior Location](lheyns3/TW-Charts/)
