@@ -15,7 +15,7 @@ body {
   color: #606c71;
 }
 h2 {
-  color: #159957;
+  color: #777;
 }
 a {
   color: #1e6bb8;
@@ -224,17 +224,18 @@ a {
     font-size: 1rem; } }
 
 .site-footer {
-  padding-top: 2rem;
+  padding-top: 1rem;
   margin-top: 2rem;
   border-top: solid 1px #eff0f1;
   font-sizeX: 12px;
   color: #819198;
 }
-
 .site-footer-owner {
   display: block;
 }
-
+.site-footer-credits {
+  font-size: 18px;
+}
 
 .topnavbar {
   border-bottom:1px #ccc solid;
