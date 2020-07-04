@@ -5,13 +5,20 @@
   <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
   <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../localsite/css/base.css" />
   <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
   <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+
+  <!--
   <link rel="stylesheet" href="../../community/css/community.css" />
+  -->
 
   <meta name="description" content="35 billion dollar storms caused 389.5 billion in damage (US dollars) in the last 6 years, 
 averaging 65 billion per year - a significant increase from the prior average of 10 billion per year">
   <meta name="keywords" content="Total damage from storms, cyclones, hurricanes, tropical depressions.">
+
+  <link rel="stylesheet" id="ivan-fonts-css" href="https://fonts.googleapis.com/css?family=Montserrat%3A400%2C700%7CRaleway%3A300%2C400%2C700&amp;subset=latin" type="text/css" media="all">
 
 </head>
 
@@ -39,14 +46,19 @@ averaging 65 billion per year - a significant increase from the prior average of
 <iframe width="100%" height="520" frameborder="0" src="https://heijns.carto.com/builder/a6f29d5e-d3f1-4b8d-992f-7f3e14cf5498/embed" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 </div>
 
-<div style="margin:30px; margin-top:0px">
+
+
   
-<div class="container" style="overflow:auto; padding-left: 50px; padding-right: 30px; ">
 
-  <br>
-  <h1>Impact of Extreme Storms <span style="white-space: nowrap;">on Human Mobility,</span> <span style="white-space: nowrap;">2013-2018</span></h1>
+<!-- two columns -->
+<div class="container">
 
-<div style="float:right; width:450px; margin-left:40px">
+<br>
+<h1>Impact of Extreme Storms <span style="white-space: nowrap;">on Human Mobility,</span> <span style="white-space: nowrap;">2013-2018</span></h1>
+
+A work in progress - post issues on our <a href="https://github.com/modelearth/storm/tree/master/impact">GitHub page</a> and fork to contribute.<br><br>
+
+<div style="float:right; width:350px; margin-left:40px; font-size:14px">
 
   <h2 style="margin-top:0px">Download Aggregated Data</h2>
 
@@ -96,31 +108,25 @@ averaging 65 billion per year - a significant increase from the prior average of
   <a href="https://github.gatech.edu/lheyns3/TW-2018-09-Mangkhut">Mangkhut (2018-09)</a><br>
   <a href="https://github.gatech.edu/lheyns3/TW-2018-10-Michael">Michael (2018-10)</a><br>
 
-
-
 </div>
 
 
 <div style="overflow: auto">
   <h2 style="margin-top:0px">Environmental Impacts</h2>
   <p>
-Until recently, most disaster recovery research has focused on "mobility resiliency" the measurement of how fast behaviors return to "normal".  Given that much of society's "normal" behavior is not positive for the environment, informed environmental decisions can help communities focus on restoring specific travel, industries and energy use to have the biggest economic and enviromental improvements during and after disasters. The traditional goal of "resiliency" is thereby being expanded to include a focus on "net positive impacts" as new jobs are created in emerging industries, including bioproducts and clean&nbsp;energy.  
+Proposed study: Disaster recovery research defines "mobility resiliency" as a measurement of how fast travel patterns return to "normal" following a disaster.  Given that "normal" behavior can create unsafe conditions for individuals and negative impacts on the environment, informed decisions could help states and counties foster positive patterns of travel, production and energy use following disasters through their fund allocations and tax incentives. 
+
+Changes in industry material flow during and after disasters can set the stage for long-term enviromental improvements. 
+
+In addition to tracking "mobility resiliency" as a process of bouncing back to normal behavior, this study will also investigate "mobility fluidity" to indentify transitions toward net positive outcomes.  
+
+By&nbsp;tracking changes in indicators such a jobs in biotech and clean&nbsp;energy production, this study will investigate equilibrium shifts toward environmentally-friendly norms in communities that are recovering from disasters. - Loren Heyns 
 
 
 <!-- Longer
 The disaster mobility study will be expaneded to include changes during pandemics.  Until recently, disaster recovery in the mobility sector has typically been assessed based on "mobility resiliency" - a measurement of how fast conditions return to "normal" in the wake of a disaster.  The problem is that much of society's "normal" behavior is not positive for the environment, nor safe for its inhabitants. Tools for making informed decisions that incorporate environmental, societal and economic impacts are needed as governments and insurers spend billions, and sometimes trillions, during disaster mitagation and recovery. The traditional goal of restoring prior patterns of traffic movement and energy usage are giving way to a desire for transformative "net positive impacts" as massive inflows of spending determine the types of new jobs created during disaster recovery.
 -->
   </p>
-
-<o>
-Areas for measuring transitions to a positive new normal after disasters include:<br>
-1. Reduced driving distances, more walking and localized transactions<br>
-2. Reduced use of vehicles that emit carbon<br>
-3. Reduced use of petrochemicals in production<br>
-4. Reduced pollution and carbon emissions<br>
-5. Reduced use of vehicles with large passenger compartments<br>
-6. Reduced use of facilities in harm's way (near low shorelines or within tight quarters)<br>
-</p>
   
 
   <p>
@@ -188,17 +194,21 @@ Contact us with special requests if you are working on research that needs addit
 <a href="https://www.ncdc.noaa.gov/sotc/tropical-cyclones/" target="all">NOAA</a> &nbsp;|&nbsp;
 <a href="http://trackthetropics.com/">Track the Tropics</a>
 
+</div>
+</div>
+<!-- /two columns -->
+
 
 <footer class="site-footer">
-  <span class="site-footer-owner"><a href="https://github.com/modelearth/storm/" target="_parent">Model.earth/storm</a> is maintained by <a href="https://dataportal.github.io" target="_parent">Loren Heyns</a></span>
-  <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span>
+  <div class="container">
+  <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span><br>
+  <!--
+  Data preparation and visualization by <a href="https://dataportal.github.io" target="_parent">Loren K Heyns</a></span><br>
+  -->
+  Expands on <a href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 typhoon study</a> by <a href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John E Taylor</a><br>
+  <br><br>
+  </div>
 </footer>
-
-
-</div>
-
-</div>
-</div>
 
 </body>
 </html>
