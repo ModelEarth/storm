@@ -8,7 +8,7 @@
 [Whole Earth](https://earth.nullschool.net/#current/wind/surface/level/orthographic=-59.66,0.34,464) 
 </span>
 
-## 2013-2019  
+## 2013-2020  
 
 <!--
 	Super Cyclonic Storm Amphan churning through the Bay of Bengal, as modeled by the GFS. The cyclone is expected to make landfall on the border between India and Bangladesh.
@@ -18,9 +18,14 @@ NOTE: the times shown in the animation are in UTC timezone. Add 5h30m for Indian
 *** As always, consult local meteorologists for up-to-date offical forecasts. *** This video is only a visualization of model output from the 2020-05-19 06:00Z run, which as of this posting is already 8 hours old.
 
 -->
+
+**Super Cyclonic Storm Amphan**  
+*Border between India and Bangladesh*  
+[2020-05-20 12pm (0 UTC)](https://earth.nullschool.net/#2020/05/20/0900Z/wind/surface/level/grid=on/orthographic=-263.54,20.84,1269/loc=-82.457,27.951)  
+
 **Hurricane Dorian 2019**  
 *Nassau, Bahamas*  
-[2018-10-09 8pm (0 UTC)](https://earth.nullschool.net/#2019/09/02/0000Z/wind/surface/level/grid=on/orthographic=-77.3504,25.0443,1269/loc=-82.4572,27.9506)  
+[2019-09-02 12am (0 UTC)](https://earth.nullschool.net/#2019/09/02/0000Z/wind/surface/level/grid=on/orthographic=-77.3504,25.0443,1269/loc=-82.4572,27.9506)  
 
 **Hurricane Michael 2018**  
 *Tampa, Florida USA*  

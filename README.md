@@ -1,3 +1,5 @@
-# Storm Impact
+# Storm Repo
 
-https://blog.mapbox.com/how-i-built-a-wind-map-with-webgl-b63022b5537f
+Storm mobility project resides in the "impact" folder.  
+
+View at [model.earth/storm/impact](https://model.earth/storm/impact/)
