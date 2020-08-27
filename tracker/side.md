@@ -19,7 +19,13 @@ NOTE: the times shown in the animation are in UTC timezone. Add 5h30m for Indian
 
 -->
 
-**Super Cyclonic Storm Amphan**  
+**Hurricane Laura 2020**  
+*Southwest Louisiana*  
+[2020-08-26 11pm (3 UTC)](https://earth.nullschool.net/#2020/08/27/0300Z/wind/surface/level/grid=on/orthographic=-92.61,29.13,3000/loc=-93.045,28.344)  
+[2020-08-27 2am (6 UTC)](https://earth.nullschool.net/#2020/08/27/0600Z/wind/surface/level/grid=on/orthographic=-92.61,29.13,3000/loc=-93.045,28.344)  
+[2020-08-27 5am (9 UTC)](https://earth.nullschool.net/#2020/08/27/0900Z/wind/surface/level/grid=on/orthographic=-92.61,29.13,3000/loc=-93.045,28.344) 
+
+**Super Cyclonic Storm Amphan 2020**  
 *Border between India and Bangladesh*  
 [2020-05-20 12pm (0 UTC)](https://earth.nullschool.net/#2020/05/20/0900Z/wind/surface/level/grid=on/orthographic=-263.54,20.84,1269/loc=-82.457,27.951)  
 
@@ -33,6 +39,7 @@ NOTE: the times shown in the animation are in UTC timezone. Add 5h30m for Indian
 [2018-10-09 11pm (3 UTC)](https://earth.nullschool.net/#2018/10/10/0300Z/wind/surface/level/grid=on/orthographic=-82.4572,27.9506,1269/loc=-82.4572,27.9506)  
 [2018-10-10 5am (9 UTC)](https://earth.nullschool.net/#2018/10/10/0900Z/wind/surface/level/grid=on/orthographic=-82.4572,27.9506,1269/loc=-82.4572,27.9506)  
 [2018-10-10 11am (15 UTC)](https://earth.nullschool.net/#2018/10/10/1500Z/wind/surface/level/grid=on/orthographic=-82.4572,27.9506,1269/loc=-82.4572,27.9506)  
+[2018-10-10 2pm (18 UTC)](https://earth.nullschool.net/#2018/10/10/1800Z/wind/surface/level/grid=on/orthographic=-82.4572,27.9506,1269/loc=-82.4572,27.9506) 
 
 **Hurricane Harvey 2017**  
 *Houston, Texas, USA - 6 Days*  
