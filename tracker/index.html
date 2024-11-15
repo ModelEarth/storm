@@ -70,13 +70,14 @@ function consoleLog(text)
 
 
 loadMarkupPage("side.md", "sideDiv", "mainframe");
-loadMarkupPage("README.md", "readmeDiv", "mainframe");
+loadMarkupPage("README.md", "readmeDiv", "parentframe");
 
 var url = "marvel/index.html";
 window.onclick = function(e) { 
   //alert("e.target.target " + e.target.target + " e.target " + e.target);
   if (e.target.target == "mainframe") {
     url = e.target; // Might place in a cookie for backing up. Then _blank can be switched to _parent
+    //alert("e.target.target " + e.target.target);
     document.getElementById("iframeInTab").href = url;
   }
 };
