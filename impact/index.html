@@ -1,14 +1,26 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+
   <title>Impact of Extreme Storms on Mobility</title>
+
+  <!--
   <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
   <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  -->
 
-  <link rel="stylesheet" href="../../localsite/css/base.css" />
+  <link href="/localsite/css/base.css" id="/localsite/css/base.css" rel="stylesheet" type="text/css" >
+  <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+
+  <!--
   <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
   <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+ -->
 
   <meta name="description" content="35 billion dollar storms caused 389.5 billion in damage (US dollars) in the last 6 years, 
 averaging 65 billion per year - a significant increase from the prior average of 10 billion per year">
@@ -130,9 +142,9 @@ In addition to tracking "mobility resiliency" as the process of bouncing back to
 
 As communities strive to establish new norms following disasters, 
 opportunities exist to transition toward net positive environmental and societal outcomes, 
-including increased short-distance local travel and the growth of local supply chains for agriculture and manufacturing.
+including increased short-distance local travel and strengthened local supply chains for agriculture and manufacturing.
 
-By&nbsp;tracking changes in local industry input-output, jobs and energy production, this study will seek to identify shifts toward environmentally-friendly industries in communities that are recovering from disasters. Using the US EPA's Environmentally-Extended Input-Output (USEEIO) model, this study will combine 24 environmental and health indicators with 380+ industry sectors tracked by the US Bureau of Economic Analysis (BEA). - Loren&nbsp;Heyns, Georgia&nbsp;Tech
+By&nbsp;tracking changes in local industry input-output, jobs and energy production, model.earth <a href="/projects/">Coding Projects</a> seek to identify shifts toward environmentally-friendly industries during recovery from disasters. Using the US EPA's Environmentally-Extended Input-Output (USEEIO) model, we analyze 24 environmental and health indicators across 380+ industry sectors tracked by the US Bureau of Economic Analysis (BEA).
 
 
 <!-- Longer
@@ -170,24 +182,13 @@ average of 65 billion per year globally. (This is a fraction of the total damage
   <hr><br>
   -->
 
-
-
   <div style="max-width:850px">
-    From these thirty-five storms, <a target="_blank" href="charts">storm mobility stats</a> were generated to identify cities with enough geotagged tweets to track changes in mobility during storms. <a target="_blank" href="cities.html">City boundaries</a> were established using city center lat/lons provided by Google, and data was pre-processed using Python and PostgreSql to display <a target="_blank" href="charts.html">Impact Charts</a> using Seaborn and D3.js. The <a target="_blank" href="refinements.html">refinements</a> page includes areas for further investigation.<br><br>
+    From these thirty-five storms, <a target="_blank" href="charts">storm mobility stats</a> were generated to identify cities with enough geotagged tweets to track changes in mobility during storms. <a target="_blank" href="cities.html">City&nbsp;boundaries</a> were established using city center lat/lons provided by Google, and data was pre-processed using Python and PostgreSql to display <a target="_blank" href="charts.html">Impact Charts</a> using Seaborn and D3.js. The <a target="_blank" href="refinements.html">refinements</a> page includes areas for further investigation.<br><br>
 
-
-  <b>Updated June 26, 2019</b><br>
-  Set human movement maximum speed to 150 kmph. 
-  Removed <a target="_blank" href="https://github.com/tweetdata/Twitter-Bots">known-bots</a> using a list of 24,578 bots combined from 4 studies. Prior to clean-up, our 16 storm impacts contained 34 known-bots, which posted 8,601 geotagged tweets.
-
-
-<!--
-Contact us with special requests if you are working on research that needs additional pre-processing.
--->
-    <br><br>
+  Updated June 26, 2019 - Set human movement maximum speed to 150 kmph. 
+  Removed <a target="_blank" href="https://github.com/tweetdata/Twitter-Bots">known-bots</a> using a list of 24,578 bots combined from 4 studies. Prior to clean-up, our 16 storm impacts contained 34 known-bots, which posted 8,601 geotagged tweets.<br><br>
     
-    The spreadsheet data above was assembled from 36 Wikipedia pages (6 years, 6 ocean regions) on September 22, 2018.
-    If you'd like to update the data, copy one of the Google Sheets above and add additions from Wikipedia, then write loren@gatech.edu to activate. If you have a small change, send an email once you've updated in Wikipedia.<br><br>
+  The spreadsheet data above was assembled from 36 Wikipedia pages (6 years, 6 ocean regions) on September 22, 2018. If you'd like to update the data, copy one of the Google Sheets above and add additions from Wikipedia, then write loren@gatech.edu to activate. If you have a small change, send an email once you've updated in Wikipedia.<br><br>
 
 
     <a target="_blank" href="https://www.wikiwand.com/en/2018_Atlantic_hurricane_season">2018 Atlantic hurricane season</a><br>
@@ -196,36 +197,26 @@ Contact us with special requests if you are working on research that needs addit
     <a target="_blank" href="https://www.wikiwand.com/en/2018_North_Indian_Ocean_cyclone_season">2018 North Indian Ocean cyclone season</a><br>
     <a target="_blank" href="https://www.wikiwand.com/en/2018%E2%80%9319_Australian_region_cyclone_season">2018-19 Australian region cyclone season</a><br>
     <a target="_blank" href="https://www.wikiwand.com/en/2018%E2%80%9319_South_Pacific_cyclone_season">2018-19 South Pacific cyclone season</a><br>
-    <br><br>
-    
-
     </div>
 
 <a target="_blank" href="https://www.ncdc.noaa.gov/billions/events/US/1980-2018">NCDC Billion-Dollar Weather</a> &nbsp;|&nbsp;
 <a target="_blank" href="https://www.ncdc.noaa.gov/sotc/tropical-cyclones/" target="all">NOAA</a> &nbsp;|&nbsp;
-<a target="_blank" href="http://trackthetropics.com/">Track the Tropics</a>
+<a target="_blank" href="http://trackthetropics.com/">Track the Tropics</a><br><br>
 
 </div>
 </div>
 <!-- /two columns -->
 
 
-<footer class="site-footer">
-  <div class="content contentpadding">
-  <span class="site-footer-credits">Georgia Tech, Network Dynamics Lab</span><br>
-  <!--
-  Data preparation and visualization by <a target="_blank" href="https://dataportal.github.io" target="_parent">Loren K Heyns</a></span><br>
-  -->
-  Research by <a href="https://dreamstudio.com/resume">Loren Heyns</a> expands on <a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 typhoon study</a> 
+<hr>
 
-  <span style="white-space: nowrap">
-  by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a>
-  </span>
+<div class="content contentpadding">
+  <h3 style="margin-bottom: 0px;">ModelEarth Project Framework</h3><br>
+  <a href="/">Model.earth</a> is open source for <a href="/io/communities/">government automation</a>, <a href="/localsite/info/">supply-chain optimization</a> and <a href="/io/learn/">graduate thesis work</a>.<br>
+  Storm travel analysis by <a href="https://dreamstudio.com/resume">Loren Heyns</a> expands on <a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 study</a> by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a><br>
 
   <br>
-  </div>
-</footer>
-
+</div>
 
 </body>
 </html>
