@@ -38,6 +38,14 @@ averaging 65 billion per year - a significant increase from the prior average of
       margin-bottom:20px;
     }
   }
+  iframe {
+    min-height: 600px;
+  }
+  @media (max-width: 600px) {
+      iframe {
+          min-height: 40vh;
+      }
+  }
 </style>
 </head>
 
@@ -47,7 +55,7 @@ averaging 65 billion per year - a significant increase from the prior average of
   <iframe width="100%" height="520" frameborder="0" src="https://georgia-map.carto.com/viz/9dcea1a6-1700-419f-b9a7-eb5d7d08935e/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 -->
 
- <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%" height="600px"></iframe><br>
+ <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%"></iframe><br>
 
 <!--
 <div style="floatX:right" class="hideMobileX">
@@ -62,7 +70,7 @@ averaging 65 billion per year - a significant increase from the prior average of
     <a target="_blank" href="charts">Storm Stats</a> | 
     <a target="_blank" href="cities.html">City Boundaries</a> | 
     <a target="_blank" href="process.html">Data Processing</a> | 
-    <a target="_blank" href="charts.html">Impact Charts</a> |
+    <a target="_blank" href="charts.html">Impact&nbsp;Charts</a> |
     <a target="_blank" href="refinements.html">Refinements</a>
 </section>
 <!--
@@ -183,7 +191,7 @@ average of 65 billion per year globally. (This is a fraction of the total damage
   -->
 
   <div style="max-width:850px">
-    From these thirty-five storms, <a target="_blank" href="charts">storm mobility stats</a> were generated to identify cities with enough geotagged tweets to track changes in mobility during storms. <a target="_blank" href="cities.html">City&nbsp;boundaries</a> were established using city center lat/lons provided by Google, and data was pre-processed using Python and PostgreSql to display <a target="_blank" href="charts.html">Impact Charts</a> using Seaborn and D3.js. The <a target="_blank" href="refinements.html">refinements</a> page includes areas for further investigation.<br><br>
+    From these thirty-five storms, <a target="_blank" href="charts">storm mobility stats</a> were generated to identify cities with enough geotagged tweets to track changes in mobility during storms. <a target="_blank" href="cities.html">City&nbsp;boundaries</a> were established using city center lat/lons provided by Google, and data was pre-processed using Python and PostgreSql to display <a target="_blank" href="charts.html">Impact&nbsp;Charts</a> using Seaborn and D3.js. The <a target="_blank" href="refinements.html">refinements</a> page includes areas for further investigation.<br><br>
 
   Updated June 26, 2019 - Set human movement maximum speed to 150 kmph. 
   Removed <a target="_blank" href="https://github.com/tweetdata/Twitter-Bots">known-bots</a> using a list of 24,578 bots combined from 4 studies. Prior to clean-up, our 16 storm impacts contained 34 known-bots, which posted 8,601 geotagged tweets.<br><br>
