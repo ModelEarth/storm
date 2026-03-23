@@ -31,9 +31,19 @@ var sidebarMaxRatio = 0.55;
 var lastWideSidebarWidth = sidebarWideDefault;
 var impactSidebarOpen = true;
 var impactSidebarInitialized = false;
+var impactIframeBaseUrl = 'https://earth.nullschool.net/';
 var impactDefaultMapHash = 'current/wind/surface/level/orthographic=-67.66,31.71,913';
 var impactLastIframeHash = '';
 var impactTopNavVisible = true;
+var impactSlider = null;
+var impactPlaybackTimer = null;
+var impactPlaybackStepHours = 3;
+var impactPlaybackInterval = 3000;
+var impactPlaybackMaxSteps = (24 / impactPlaybackStepHours) * 2;
+var impactPlaybackStepCount = 0;
+var impactUseMilitaryTime = false;
+var impactUpdatingSliderFromHash = false;
+var impactLastSliderVisualHour = null;
 
 window.onload=function(){
   initImpactLayout();
@@ -110,22 +120,463 @@ function toggleImpactSidebar(forceState) {
 }
 
 function getImpactPageHashString() {
-  return window.location.hash ? window.location.hash.substring(1) : '';
+  return normalizeImpactHashString(window.location.hash ? window.location.hash.substring(1) : '');
 }
 
-function syncImpactIframeHash() {
+function normalizeImpactHashString(hashString) {
+  var normalized = typeof hashString === 'string' ? hashString.trim() : '';
+  if (!normalized) {
+    return impactDefaultMapHash;
+  }
+
+  if (normalized.charAt(0) === '#') {
+    normalized = normalized.substring(1);
+  }
+
+  var hashUrlMatch = normalized.match(/^https?:\/\/[^#]+#(.*)$/i);
+  if (hashUrlMatch && hashUrlMatch[1]) {
+    normalized = hashUrlMatch[1];
+  } else {
+    normalized = normalized.replace(/^https?:\/\/earth\.nullschool\.net\/?#?/i, '');
+  }
+
+  if (normalized.indexOf('&') !== -1) {
+    normalized = normalized.split('&')[0];
+  }
+
+  normalized = normalized.replace(/^#+/, '');
+  return normalized || impactDefaultMapHash;
+}
+
+function syncImpactIframeHash(hashString) {
   var iframe = document.getElementById('mainframe');
   if (!iframe) {
     return;
   }
 
-  var nextHash = getImpactPageHashString() || impactDefaultMapHash;
+  var nextHash = normalizeImpactHashString(typeof hashString === 'string' ? hashString : getImpactPageHashString());
   if (nextHash === impactLastIframeHash) {
     return;
   }
 
   impactLastIframeHash = nextHash;
-  iframe.src = 'https://earth.nullschool.net/#' + nextHash;
+  iframe.src = impactIframeBaseUrl + '#' + nextHash;
+}
+
+function setImpactHashString(hashString) {
+  var nextHash = normalizeImpactHashString(hashString);
+  syncImpactIframeHash(nextHash);
+  if (typeof go === 'function') {
+    go({'': nextHash});
+    return;
+  }
+  goHash({'': nextHash});
+}
+
+function getImpactDefaultRestPath() {
+  return impactDefaultMapHash.split('/').slice(1).join('/');
+}
+
+function getImpactCurrentUtcDate() {
+  var now = new Date();
+  return new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    now.getUTCHours(),
+    0,
+    0,
+    0
+  ));
+}
+
+function roundImpactHourToStep(hour) {
+  return Math.floor(hour / impactPlaybackStepHours) * impactPlaybackStepHours;
+}
+
+function formatImpactHourLabel(hourValue) {
+  var hour = Number(hourValue);
+  if (impactUseMilitaryTime) {
+    return String(hour).padStart(2, '0') + ':00';
+  }
+
+  if (hour === 0 || hour === 24) {
+    return '12am';
+  }
+  if (hour === 12) {
+    return '12pm';
+  }
+  if (hour < 12) {
+    return hour + 'am';
+  }
+  return (hour - 12) + 'pm';
+}
+
+function refreshImpactSliderLabels(pipsSlider) {
+  if (!pipsSlider) {
+    return;
+  }
+
+  var pips = pipsSlider.querySelectorAll('.noUi-value');
+  for (var i = 0; i < pips.length; i++) {
+    var pipValue = Number(pips[i].getAttribute('data-value'));
+    pips[i].textContent = formatImpactHourLabel(pipValue);
+    if (pipValue === 3) {
+      pips[i].classList.add('impact-first-pip');
+    } else {
+      pips[i].classList.remove('impact-first-pip');
+    }
+  }
+}
+
+function getImpactHashState(hashString) {
+  var rawHash = normalizeImpactHashString(typeof hashString === 'string' ? hashString : getImpactPageHashString());
+  var parts = rawHash.split('/');
+  var isDated = parts.length > 4 &&
+    /^\d{4}$/.test(parts[0]) &&
+    /^\d{2}$/.test(parts[1]) &&
+    /^\d{2}$/.test(parts[2]) &&
+    /^\d{3,4}Z$/.test(parts[3]);
+
+  if (isDated) {
+    var rawHour = parts[3].replace('Z', '');
+    var paddedHour = rawHour.length === 3 ? '0' + rawHour : rawHour;
+    var hour = parseInt(paddedHour.substring(0, 2), 10);
+    var date = new Date(Date.UTC(
+      parseInt(parts[0], 10),
+      parseInt(parts[1], 10) - 1,
+      parseInt(parts[2], 10),
+      hour,
+      0,
+      0,
+      0
+    ));
+    return {
+      rawHash: rawHash,
+      isDated: true,
+      date: date,
+      hour: hour,
+      restPath: parts.slice(4).join('/') || getImpactDefaultRestPath()
+    };
+  }
+
+  var currentDate = getImpactCurrentUtcDate();
+  return {
+    rawHash: rawHash,
+    isDated: false,
+    date: currentDate,
+    hour: roundImpactHourToStep(currentDate.getUTCHours()),
+    restPath: parts[0] === 'current' ? (parts.slice(1).join('/') || getImpactDefaultRestPath()) : getImpactDefaultRestPath()
+  };
+}
+
+function formatImpactHashFromDate(date, restPath) {
+  var year = String(date.getUTCFullYear());
+  var month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  var day = String(date.getUTCDate()).padStart(2, '0');
+  var hour = String(date.getUTCHours()).padStart(2, '0');
+  return year + '/' + month + '/' + day + '/' + hour + '00Z/' + (restPath || getImpactDefaultRestPath());
+}
+
+function buildImpactHashForSliderHour(sliderHour) {
+  var state = getImpactHashState();
+  var nextDate = new Date(Date.UTC(
+    state.date.getUTCFullYear(),
+    state.date.getUTCMonth(),
+    state.date.getUTCDate(),
+    0,
+    0,
+    0,
+    0
+  ));
+  var normalizedHour = Math.max(0, Math.min(24, sliderHour));
+  if (normalizedHour >= 24) {
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+    nextDate.setUTCHours(0);
+  } else {
+    nextDate.setUTCHours(normalizedHour);
+  }
+  return formatImpactHashFromDate(nextDate, state.restPath);
+}
+
+function buildNextImpactPlaybackHash() {
+  var state = getImpactHashState();
+  var nextDate = new Date(state.date.getTime());
+  nextDate.setUTCHours(nextDate.getUTCHours() + impactPlaybackStepHours);
+  return formatImpactHashFromDate(nextDate, state.restPath);
+}
+
+function getNextImpactPlaybackDate() {
+  var state = getImpactHashState();
+  var nextDate = new Date(state.date.getTime());
+  nextDate.setUTCHours(nextDate.getUTCHours() + impactPlaybackStepHours);
+  return nextDate;
+}
+
+function updateImpactSliderFromHash() {
+  if (!impactSlider || !impactSlider.noUiSlider) {
+    return;
+  }
+
+  var state = getImpactHashState();
+  var sliderHour = state.hour === 0 ? 24 : state.hour;
+  var suppressMotion = impactLastSliderVisualHour === 24 && sliderHour < impactLastSliderVisualHour;
+
+  impactUpdatingSliderFromHash = true;
+  if (suppressMotion) {
+    impactSlider.classList.add('impact-slider-no-motion');
+  }
+  impactSlider.noUiSlider.set(sliderHour);
+  impactUpdatingSliderFromHash = false;
+  impactLastSliderVisualHour = sliderHour;
+
+  if (suppressMotion) {
+    window.requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
+        if (impactSlider) {
+          impactSlider.classList.remove('impact-slider-no-motion');
+        }
+      });
+    });
+  }
+}
+
+function updateImpactPlayPauseButton() {
+  var button = document.getElementById('impactPlayPauseButton');
+  if (!button) {
+    return;
+  }
+
+  var icon = button.querySelector('.material-icons');
+  if (!icon) {
+    return;
+  }
+
+  var isPlaying = !!impactPlaybackTimer;
+  icon.textContent = isPlaying ? 'pause' : 'play_arrow';
+  button.setAttribute('aria-label', isPlaying ? 'Pause map playback' : 'Play map playback');
+  button.setAttribute('title', isPlaying ? 'Pause map playback' : 'Play map playback');
+}
+
+function stopImpactPlayback() {
+  if (impactPlaybackTimer) {
+    clearInterval(impactPlaybackTimer);
+    impactPlaybackTimer = null;
+  }
+  impactPlaybackStepCount = 0;
+  updateImpactPlayPauseButton();
+}
+
+function advanceImpactPlaybackStep() {
+  var nextDate = getNextImpactPlaybackDate();
+  if (nextDate.getTime() > getImpactCurrentUtcDate().getTime()) {
+    stopImpactPlayback();
+    return;
+  }
+
+  impactPlaybackStepCount += 1;
+  setImpactHashString(formatImpactHashFromDate(nextDate, getImpactHashState().restPath));
+
+  if (impactPlaybackStepCount >= impactPlaybackMaxSteps) {
+    stopImpactPlayback();
+  }
+}
+
+function startImpactPlayback() {
+  if (impactPlaybackTimer) {
+    return;
+  }
+
+  impactPlaybackStepCount = 0;
+  advanceImpactPlaybackStep();
+  if (impactPlaybackStepCount >= impactPlaybackMaxSteps) {
+    return;
+  }
+  impactPlaybackTimer = window.setInterval(function() {
+    advanceImpactPlaybackStep();
+  }, impactPlaybackInterval);
+  updateImpactPlayPauseButton();
+}
+
+function toggleImpactPlayback() {
+  if (impactPlaybackTimer) {
+    stopImpactPlayback();
+  } else {
+    startImpactPlayback();
+  }
+}
+
+function ensureImpactPlayPauseButton() {
+  waitForElm('#headerIcons').then(() => {
+    var headerIcons = document.querySelector('#upIconTray #headerIcons') || document.getElementById('headerIcons');
+    if (!headerIcons || document.getElementById('impactPlayPauseButton')) {
+      updateImpactPlayPauseButton();
+      return;
+    }
+
+    var button = document.createElement('div');
+    button.id = 'impactPlayPauseButton';
+    button.className = 'playPauseButton topButton';
+    button.setAttribute('role', 'button');
+    button.setAttribute('tabindex', '0');
+    button.innerHTML = '<i class="material-icons" style="font-size:36px;cursor:pointer">play_arrow</i>';
+    headerIcons.prepend(button);
+
+    button.addEventListener('click', function(event) {
+      toggleImpactPlayback();
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    button.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        toggleImpactPlayback();
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+
+    updateImpactPlayPauseButton();
+  });
+}
+
+function setupImpactSlider() {
+  waitForElm('#slider-pips').then(() => {
+    var pipsSlider = document.getElementById('slider-pips');
+    var sliderGapHitArea = document.getElementById('slider-pips-gap-hit-area');
+    var leftHitArea = document.getElementById('slider-pips-hit-left');
+    var rightHitArea = document.getElementById('slider-pips-hit-right');
+    var sliderBase;
+    if (!pipsSlider || pipsSlider.noUiSlider) {
+      impactSlider = pipsSlider;
+      updateImpactSliderFromHash();
+      return;
+    }
+
+    noUiSlider.create(pipsSlider, {
+      range: {
+        min: 3,
+        max: 24
+      },
+      start: [12],
+      step: impactPlaybackStepHours,
+      pips: {mode: 'values', values: [3, 6, 9, 12, 15, 18, 21, 24]}
+    });
+
+    impactSlider = pipsSlider;
+    sliderBase = pipsSlider.querySelector('.noUi-base');
+    refreshImpactSliderLabels(pipsSlider);
+
+    var pips = pipsSlider.querySelectorAll('.noUi-value');
+    function clickOnPip() {
+      stopImpactPlayback();
+      var value = Number(this.getAttribute('data-value'));
+      pipsSlider.noUiSlider.set(value);
+    }
+
+    function getPointerClientX(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0].clientX;
+      }
+      if (event.changedTouches && event.changedTouches.length) {
+        return event.changedTouches[0].clientX;
+      }
+      return event.clientX;
+    }
+
+    function getImpactSliderStepValue(rawValue) {
+      var minValue = 3;
+      var maxValue = 24;
+      var clampedValue = Math.max(minValue, Math.min(maxValue, rawValue));
+      var steppedValue = Math.round((clampedValue - minValue) / impactPlaybackStepHours) * impactPlaybackStepHours + minValue;
+      return Math.max(minValue, Math.min(maxValue, steppedValue));
+    }
+
+    function setImpactSliderFromPointer(event) {
+      if (!sliderBase) {
+        return;
+      }
+
+      var rect = sliderBase.getBoundingClientRect();
+      if (!rect.width) {
+        return;
+      }
+
+      var pointerX = getPointerClientX(event);
+      var ratio = (pointerX - rect.left) / rect.width;
+      var rawValue = 3 + (Math.max(0, Math.min(1, ratio)) * (24 - 3));
+
+      stopImpactPlayback();
+      pipsSlider.noUiSlider.set(getImpactSliderStepValue(rawValue));
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    for (var i = 0; i < pips.length; i++) {
+      pips[i].style.cursor = 'pointer';
+      pips[i].addEventListener('click', clickOnPip);
+    }
+
+    function jumpToSliderEdge(value, event) {
+      stopImpactPlayback();
+      pipsSlider.noUiSlider.set(value);
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+
+    if (leftHitArea) {
+      leftHitArea.addEventListener('mousedown', function(event) {
+        jumpToSliderEdge(3, event);
+      });
+      leftHitArea.addEventListener('touchstart', function(event) {
+        jumpToSliderEdge(3, event);
+      }, { passive: false });
+    }
+
+    if (rightHitArea) {
+      rightHitArea.addEventListener('mousedown', function(event) {
+        jumpToSliderEdge(24, event);
+      });
+      rightHitArea.addEventListener('touchstart', function(event) {
+        jumpToSliderEdge(24, event);
+      }, { passive: false });
+    }
+
+    if (sliderBase) {
+      sliderBase.addEventListener('mousedown', function(event) {
+        if (!event.target.closest('.noUi-handle')) {
+          setImpactSliderFromPointer(event);
+        }
+      });
+      sliderBase.addEventListener('touchstart', function(event) {
+        if (!event.target.closest('.noUi-handle')) {
+          setImpactSliderFromPointer(event);
+        }
+      }, { passive: false });
+    }
+
+    if (sliderGapHitArea) {
+      sliderGapHitArea.addEventListener('mousedown', setImpactSliderFromPointer);
+      sliderGapHitArea.addEventListener('touchstart', setImpactSliderFromPointer, { passive: false });
+    }
+
+    pipsSlider.addEventListener('mousedown', stopImpactPlayback);
+    pipsSlider.addEventListener('touchstart', stopImpactPlayback, { passive: true });
+
+    pipsSlider.noUiSlider.on('start', function() {
+      stopImpactPlayback();
+    });
+    pipsSlider.noUiSlider.on('set', function(values) {
+      if (impactUpdatingSliderFromHash) {
+        return;
+      }
+      stopImpactPlayback();
+      setImpactHashString(buildImpactHashForSliderHour(Number(values[0])));
+    });
+
+    updateImpactSliderFromHash();
+  });
 }
 
 function updateImpactTopNav() {
@@ -151,7 +602,7 @@ function updateImpactLayout() {
     return;
   }
 
-  var isNarrow = layoutShell.clientWidth < 980;
+  var isNarrow = layoutShell.clientWidth < 600;
   layoutShell.classList.toggle('is-narrow', isNarrow);
 
   if (!impactSidebarInitialized) {
@@ -165,16 +616,19 @@ function updateImpactLayout() {
 function initImpactLayout() {
   var resizer = document.getElementById('resizer');
   var resizable = document.getElementById('resizable');
+  var displayPanel = document.getElementById('displayPanel');
   var iframe = document.querySelector('.iframe');
   var layoutShell = document.getElementById('impactLayout');
   var sidebarToggle = document.getElementById('impactSidebarToggle');
   var isDragging = false;
 
-  if (!resizer || !resizable || !iframe || !layoutShell || !sidebarToggle) {
+  if (!resizer || !resizable || !displayPanel || !iframe || !layoutShell || !sidebarToggle) {
     return;
   }
 
   updateImpactLayout();
+  setupImpactSlider();
+  ensureImpactPlayPauseButton();
 
   if (typeof ResizeObserver === 'function') {
     var layoutObserver = new ResizeObserver(updateImpactLayout);
@@ -259,45 +713,29 @@ function initImpactLayout() {
     });
   }
   updateImpactTopNav();
-  document.addEventListener('hashChangeEvent', syncImpactIframeHash, false);
+  document.addEventListener('hashChangeEvent', function() {
+    syncImpactIframeHash();
+    updateImpactSliderFromHash();
+  }, false);
+  displayPanel.addEventListener('mousedown', stopImpactPlayback);
+  displayPanel.addEventListener('touchstart', stopImpactPlayback, { passive: true });
+  iframe.addEventListener('mousedown', stopImpactPlayback);
+  iframe.addEventListener('touchstart', stopImpactPlayback, { passive: true });
+  window.addEventListener('blur', function() {
+    if (document.activeElement === iframe) {
+      stopImpactPlayback();
+    }
+  });
+  resizable.addEventListener('click', function(event) {
+    var sidebarHashLink = event.target.closest('a[href^="#"]');
+    if (sidebarHashLink) {
+      stopImpactPlayback();
+    }
+  });
 }
 
 loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
 //loadMarkdown("README.md", "readmeDiv", "parentframe");
-
-
-waitForElm("#slider-pips").then(() => {
-   
-    // Slider: https://refreshless.com/nouislider/
-    // Also dot style: https://jsfiddle.net/leongersen/9hyfv0bw/11/
-
-    // Also see: Preact Slider https://codepen.io/avol/pen/LyovJb
-
-    var pipsSlider = document.getElementById('slider-pips');
-
-    noUiSlider.create(pipsSlider, {
-        range: {
-            min: 0,
-            max: 24
-        },
-        start: [12],
-        pips: {mode: 'count', values: 9}
-    });
-
-    var pips = pipsSlider.querySelectorAll('.noUi-value');
-
-    function clickOnPip() {
-        var value = Number(this.getAttribute('data-value'));
-        pipsSlider.noUiSlider.set(value);
-    }
-
-    for (var i = 0; i < pips.length; i++) {
-
-        // For this example. Do this in CSS!
-        pips[i].style.cursor = 'pointer';
-        pips[i].addEventListener('click', clickOnPip);
-    }
-});
 
 </script>
 
@@ -364,8 +802,9 @@ waitForElm("#slider-pips").then(() => {
     font-size: 34px;
   }
   #impactSidebarToggle .menu-toggle-arrow {
-    font-size: 22px;
+    font-size: 26px;
     color: #666;
+    transform: translate(-50%, -50%);
   }
   #impactSidebarToggle:hover .circle-bg {
     color: rgba(232, 236, 240, 0.95);
@@ -427,15 +866,87 @@ waitForElm("#slider-pips").then(() => {
           min-height: 40vh;
       }
   }
+  #slider-pips-wrap {
+    position: absolute;
+    right: 10px;
+    bottom: 48px;
+    width: min(370px, calc(100% - 20px));
+    height: 32px;
+    z-index: 2;
+    pointer-events: none;
+  }
   #slider-pips {
     position: absolute;
-    right: 20px;
-    bottom: 48px;
-    min-width: 300px;
-    max-width: calc(100% - 40px);
+    right: 10px;
+    bottom: 0px;
+    width: calc(100% - 20px);
     height: 12px;
     background-color: rgba(0,0,0,.5);
+    pointer-events: auto;
+  }
+  #slider-pips-gap-hit-area {
+    position: absolute;
+    right: 10px;
+    bottom: -6px;
+    width: calc(100% - 20px);
+    height: 18px;
     z-index: 2;
+    pointer-events: auto;
+  }
+  .slider-pips-hit-area {
+    position: absolute;
+    bottom: 0px;
+    height: 12px;
+    width: 10px;
+    z-index: 3;
+    pointer-events: auto;
+  }
+  #slider-pips-hit-left {
+    left: 0px;
+  }
+  #slider-pips-hit-right {
+    right: 0px;
+  }
+  #slider-pips .noUi-value {
+    color: #fff;
+    font-size: 12px;
+    min-width: 28px;
+    margin-left: -14px;
+    text-align: center;
+    white-space: nowrap;
+    transform: translateX(-10px);
+  }
+  #slider-pips .noUi-value.impact-first-pip {
+    margin-left: 0px;
+    text-align: left;
+  }
+  #slider-pips .noUi-value[data-value="6"],
+  #slider-pips .noUi-value[data-value="9"],
+  #slider-pips .noUi-value[data-value="12"],
+  #slider-pips .noUi-value[data-value="15"],
+  #slider-pips .noUi-value[data-value="18"],
+  #slider-pips .noUi-value[data-value="21"] {
+    transform: translateX(0px);
+  }
+  #slider-pips .noUi-pips-horizontal {
+    padding-top: 5px;
+    height: 75px;
+  }
+  #slider-pips .noUi-handle {
+    height: 17px;
+    top: -3px;
+  }
+  #slider-pips .noUi-touch-area {
+    height: 17px;
+  }
+  #slider-pips.impact-slider-no-motion .noUi-origin,
+  #slider-pips.impact-slider-no-motion .noUi-connect {
+    transition: none !important;
+  }
+  #slider-pips .noUi-handle:before,
+  #slider-pips .noUi-handle:after {
+    height: 9px;
+    top: 4px;
   }
   .noUi-marker-horizontal.noUi-marker-large {
     height: 10px;
@@ -506,13 +1017,37 @@ waitForElm("#slider-pips").then(() => {
   #impactNav.nav-collapsed #impactNavLinks {
     display: none;
   }
+  #impactPlayPauseButton {
+    display: none;
+  }
+  body.storm-impact-page #upIconTray #headerIcons .playPauseButton {
+    display: block;
+    float: left;
+    margin-left: -10px;
+    padding-top: 7px;
+    padding-bottom: 4px;
+    color: #aaa;
+  }
+  body.storm-impact-page #upIconTray #headerIcons .playPauseButton:hover,
+  body.storm-impact-page #upIconTray #headerIcons .playPauseButton:focus {
+    color: #333;
+  }
+  body.storm-impact-page #upIconTray #headerIcons .playPauseButton .material-icons {
+    font-size: 36px;
+    cursor: pointer;
+    transform: translate(-3px, 1px);
+  }
   .dark #impactNav {
     border-bottom-color: #42505d;
+  }
+  body.dark.storm-impact-page #upIconTray #headerIcons .playPauseButton:hover,
+  body.dark.storm-impact-page #upIconTray #headerIcons .playPauseButton:focus {
+    color: #fff;
   }
 </style>
 </head>
 
-<body>
+<body class="storm-impact-page">
 
 <section id="impactNav">
     <span id="impactNavToggle" role="button" tabindex="0" aria-label="Hide top navigation" title="Hide top navigation"><img src="img/logo/favicon.png" alt="Toggle navigation"></span>
@@ -552,8 +1087,13 @@ waitForElm("#slider-pips").then(() => {
 -->
 <div id="displayPanel">
  <div id="mapToggleAnchor" class="impactToggleAnchor"></div>
- <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
- <div id="slider-pips"></div>
+ <iframe class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
+ <div id="slider-pips-wrap">
+  <div id="slider-pips-gap-hit-area"></div>
+  <div id="slider-pips-hit-left" class="slider-pips-hit-area"></div>
+  <div id="slider-pips"></div>
+  <div id="slider-pips-hit-right" class="slider-pips-hit-area"></div>
+ </div>
 </div>
 
 <!--
@@ -709,11 +1249,7 @@ average of 65 billion per year globally. (This is a fraction of the total damage
 <hr>
 
 <div class="content contentpadding">
-  <h3 style="margin-bottom: 0px;">ModelEarth Project Framework</h3><br>
-  <a href="/">Model.earth</a> is open source for <a href="/io/communities/">government automation</a>, <a href="/localsite/info/">supply-chain optimization</a> and <a href="/io/learn/">graduate thesis work</a>.<br>
-  The storm mobility analysis by <a href="https://dreamstudio.com/loren">Loren Heyns</a> expands on <a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 study</a> by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a><br>
-
-  <br>
+  Research by <a href="https://dreamstudio.com/loren">Loren Heyns</a> expanding on <!--<a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 study</a>--> work by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a>
 </div>
 
 </div>
