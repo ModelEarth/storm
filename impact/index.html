@@ -31,9 +31,13 @@ var sidebarMaxRatio = 0.55;
 var lastWideSidebarWidth = sidebarWideDefault;
 var impactSidebarOpen = true;
 var impactSidebarInitialized = false;
+var impactDefaultMapHash = 'current/wind/surface/level/orthographic=-67.66,31.71,913';
+var impactLastIframeHash = '';
+var impactTopNavVisible = true;
 
 window.onload=function(){
   initImpactLayout();
+  syncImpactIframeHash();
 }
 
 function getImpactLayoutWidth() {
@@ -103,6 +107,42 @@ function applyImpactSidebarState() {
 function toggleImpactSidebar(forceState) {
   impactSidebarOpen = typeof forceState === 'boolean' ? forceState : !impactSidebarOpen;
   applyImpactSidebarState();
+}
+
+function getImpactPageHashString() {
+  return window.location.hash ? window.location.hash.substring(1) : '';
+}
+
+function syncImpactIframeHash() {
+  var iframe = document.getElementById('mainframe');
+  if (!iframe) {
+    return;
+  }
+
+  var nextHash = getImpactPageHashString() || impactDefaultMapHash;
+  if (nextHash === impactLastIframeHash) {
+    return;
+  }
+
+  impactLastIframeHash = nextHash;
+  iframe.src = 'https://earth.nullschool.net/#' + nextHash;
+}
+
+function updateImpactTopNav() {
+  var impactNav = document.getElementById('impactNav');
+  var toggle = document.getElementById('impactNavToggle');
+  if (!impactNav || !toggle) {
+    return;
+  }
+
+  impactNav.classList.toggle('nav-collapsed', !impactTopNavVisible);
+  toggle.setAttribute('aria-label', impactTopNavVisible ? 'Hide top navigation' : 'Show top navigation');
+  toggle.setAttribute('title', impactTopNavVisible ? 'Hide top navigation' : 'Show top navigation');
+}
+
+function toggleImpactTopNav(forceState) {
+  impactTopNavVisible = typeof forceState === 'boolean' ? forceState : !impactTopNavVisible;
+  updateImpactTopNav();
 }
 
 function updateImpactLayout() {
@@ -205,6 +245,21 @@ function initImpactLayout() {
       event.preventDefault();
     }
   });
+  var impactNavToggle = document.getElementById('impactNavToggle');
+  if (impactNavToggle) {
+    impactNavToggle.addEventListener('click', function(event) {
+      toggleImpactTopNav();
+      event.preventDefault();
+    });
+    impactNavToggle.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        toggleImpactTopNav();
+        event.preventDefault();
+      }
+    });
+  }
+  updateImpactTopNav();
+  document.addEventListener('hashChangeEvent', syncImpactIframeHash, false);
 }
 
 loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
@@ -435,6 +490,22 @@ waitForElm("#slider-pips").then(() => {
     padding-bottom: 10px;
     border-bottom: 1px solid #d8e0e8;
   }
+  #impactNavToggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  #impactNavToggle img {
+    width: 18px;
+    margin-right: 0px;
+  }
+  #impactNavLinks {
+    display: inline;
+  }
+  #impactNav.nav-collapsed #impactNavLinks {
+    display: none;
+  }
   .dark #impactNav {
     border-bottom-color: #42505d;
   }
@@ -444,7 +515,8 @@ waitForElm("#slider-pips").then(() => {
 <body>
 
 <section id="impactNav">
-    <a target="_blank" href="/"><img src="img/logo/favicon.png" style="width:18px;margin-right:8px"></a>
+    <span id="impactNavToggle" role="button" tabindex="0" aria-label="Hide top navigation" title="Hide top navigation"><img src="img/logo/favicon.png" alt="Toggle navigation"></span>
+    <span id="impactNavLinks">
     <a href="../tracker/">Strom Tracker</a> | 
     <a href="./">Mobility Impact</a> | 
     <a href="charts">Storm Stats</a> | 
@@ -452,6 +524,7 @@ waitForElm("#slider-pips").then(() => {
     <a href="process.html">Data Processing</a> | 
     <a href="charts.html">Impact&nbsp;Charts</a> |
     <a href="refinements.html">Refinements</a>
+    </span>
 </section>
 
 <div id="impactLayout">
