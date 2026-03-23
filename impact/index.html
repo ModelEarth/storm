@@ -29,6 +29,8 @@ var sidebarMinWidth = 220;
 var sidebarWideDefault = 240;
 var sidebarMaxRatio = 0.55;
 var lastWideSidebarWidth = sidebarWideDefault;
+var impactSidebarOpen = true;
+var impactSidebarInitialized = false;
 
 window.onload=function(){
   initImpactLayout();
@@ -57,22 +59,67 @@ function setSidebarWidth(width) {
   resizable.style.width = clampedWidth + 'px';
 }
 
-function updateImpactLayout() {
+function updateImpactSidebarToggle() {
+  var toggleWrap = document.getElementById('impactSidebarToggleWrap');
+  var toggleButton = document.getElementById('impactSidebarToggle');
+  var toggleIcon = document.getElementById('impactSidebarMenuToggleIcon');
+  var targetAnchor = document.getElementById(impactSidebarOpen ? 'sidebarToggleAnchor' : 'mapToggleAnchor');
+
+  if (!toggleWrap || !toggleButton || !toggleIcon || !targetAnchor) {
+    return;
+  }
+
+  if (toggleWrap.parentNode !== targetAnchor) {
+    targetAnchor.appendChild(toggleWrap);
+  }
+
+  toggleIcon.textContent = impactSidebarOpen ? 'menu_open' : 'menu';
+  toggleButton.setAttribute('aria-label', impactSidebarOpen ? 'Hide navigation column' : 'Show navigation column');
+  toggleButton.setAttribute('title', impactSidebarOpen ? 'Hide navigation column' : 'Show navigation column');
+}
+
+function applyImpactSidebarState() {
   var layoutShell = document.getElementById('impactLayout');
   var resizable = document.getElementById('resizable');
   if (!layoutShell || !resizable) {
     return;
   }
 
-  var isNarrow = layoutShell.clientWidth < 980;
-  layoutShell.classList.toggle('is-narrow', isNarrow);
+  layoutShell.classList.toggle('sidebar-hidden', !impactSidebarOpen);
 
-  if (isNarrow) {
-    resizable.style.width = '100%';
+  if (impactSidebarOpen) {
+    if (layoutShell.classList.contains('is-narrow')) {
+      resizable.style.width = '100%';
+    } else {
+      setSidebarWidth(lastWideSidebarWidth || sidebarWideDefault);
+    }
+  } else {
+    resizable.style.width = '';
+  }
+
+  updateImpactSidebarToggle();
+}
+
+function toggleImpactSidebar(forceState) {
+  impactSidebarOpen = typeof forceState === 'boolean' ? forceState : !impactSidebarOpen;
+  applyImpactSidebarState();
+}
+
+function updateImpactLayout() {
+  var layoutShell = document.getElementById('impactLayout');
+  if (!layoutShell) {
     return;
   }
 
-  setSidebarWidth(lastWideSidebarWidth || sidebarWideDefault);
+  var isNarrow = layoutShell.clientWidth < 980;
+  layoutShell.classList.toggle('is-narrow', isNarrow);
+
+  if (!impactSidebarInitialized) {
+    impactSidebarOpen = !isNarrow;
+    impactSidebarInitialized = true;
+  }
+
+  applyImpactSidebarState();
 }
 
 function initImpactLayout() {
@@ -80,9 +127,10 @@ function initImpactLayout() {
   var resizable = document.getElementById('resizable');
   var iframe = document.querySelector('.iframe');
   var layoutShell = document.getElementById('impactLayout');
+  var sidebarToggle = document.getElementById('impactSidebarToggle');
   var isDragging = false;
 
-  if (!resizer || !resizable || !iframe || !layoutShell) {
+  if (!resizer || !resizable || !iframe || !layoutShell || !sidebarToggle) {
     return;
   }
 
@@ -147,6 +195,16 @@ function initImpactLayout() {
   document.addEventListener('touchmove', moveDrag, { passive: false });
   document.addEventListener('touchend', endDrag);
   document.addEventListener('touchcancel', endDrag);
+  sidebarToggle.addEventListener('click', function(event) {
+    toggleImpactSidebar();
+    event.preventDefault();
+  });
+  sidebarToggle.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      toggleImpactSidebar();
+      event.preventDefault();
+    }
+  });
 }
 
 loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
@@ -197,6 +255,7 @@ waitForElm("#slider-pips").then(() => {
     user-select: none;
   }
   #impactLayout {
+    position: relative;
     display: flex;
     align-items: flex-start;
     width: 100%;
@@ -215,6 +274,49 @@ waitForElm("#slider-pips").then(() => {
   }
   #sideDiv {
     font-size: 12px;
+  }
+  .impactToggleAnchor {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    z-index: 1002;
+  }
+  #sidebarToggleAnchor {
+    top: 0px;
+    right: 0px;
+  }
+  #mapToggleAnchor {
+    top: 0px;
+    left: 0px;
+  }
+  #impactSidebarToggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+  }
+  #impactSidebarToggle .material-icons {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  #impactSidebarToggle .circle-bg {
+    color: transparent;
+    font-size: 34px;
+  }
+  #impactSidebarToggle .menu-toggle-arrow {
+    font-size: 22px;
+    color: #666;
+  }
+  #impactSidebarToggle:hover .circle-bg {
+    color: rgba(232, 236, 240, 0.95);
+  }
+  #impactSidebarToggle:hover .menu-toggle-arrow {
+    color: #222;
   }
   #resizer {
     position: absolute;
@@ -293,6 +395,12 @@ waitForElm("#slider-pips").then(() => {
     margin: 20px 20px 0;
     padding-right: 0px;
   }
+  #impactLayout.sidebar-hidden #resizable {
+    display: none;
+  }
+  #impactLayout.sidebar-hidden #mainarea {
+    padding-left: 20px;
+  }
   #impactLayout.is-narrow #resizer {
     display: none;
   }
@@ -302,6 +410,18 @@ waitForElm("#slider-pips").then(() => {
   }
   .dark #resizer:before {
     background: #5d6974;
+  }
+  .dark #impactSidebarToggle .circle-bg {
+    color: transparent;
+  }
+  .dark #impactSidebarToggle .menu-toggle-arrow {
+    color: #d7dde3;
+  }
+  .dark #impactSidebarToggle:hover .circle-bg {
+    color: rgba(232, 236, 240, 0.6);
+  }
+  .dark #impactSidebarToggle:hover .menu-toggle-arrow {
+    color: #fff;
   }
   .dark iframe {
     background: #1e242a;
@@ -337,6 +457,14 @@ waitForElm("#slider-pips").then(() => {
 <div id="impactLayout">
 
 <div id="resizable">
+  <div id="sidebarToggleAnchor" class="impactToggleAnchor">
+    <div id="impactSidebarToggleWrap">
+      <div id="impactSidebarToggle" class="menuIconHolder menuToggleHolderMap" role="button" tabindex="0" aria-label="Toggle navigation column" title="Toggle navigation column">
+        <i class="material-icons circle-bg">circle</i>
+        <i id="impactSidebarMenuToggleIcon" class="material-icons menu-toggle-arrow">menu_open</i>
+      </div>
+    </div>
+  </div>
   <!--
   <a href="/"><img class="headerLogo" src="/community/hubs/img/planet.live.png" style="height:40px" /></a>
   -->
@@ -350,6 +478,7 @@ waitForElm("#slider-pips").then(() => {
   <iframe width="100%" height="520" frameborder="0" src="https://georgia-map.carto.com/viz/9dcea1a6-1700-419f-b9a7-eb5d7d08935e/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 -->
 <div id="displayPanel">
+ <div id="mapToggleAnchor" class="impactToggleAnchor"></div>
  <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
  <div id="slider-pips"></div>
 </div>
