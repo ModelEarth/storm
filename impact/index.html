@@ -6,56 +6,353 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 
-  <title>Impact of Extreme Storms on Mobility</title>
+<title>Impact of Extreme Storms on Mobility</title>
+
+<link href="/localsite/css/base.css" id="/localsite/css/base.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+
+<script type="text/javascript" src="../tracker/js/nouislider.min.js"></script>
+<link rel="stylesheet" href="../tracker/css/nouislider.min.css" />
 
   <!--
-  <link rel="icon" type="image/x-icon" href="img/logo/favicon.png" />
-  <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  -->
-
-  <link href="/localsite/css/base.css" id="/localsite/css/base.css" rel="stylesheet" type="text/css" >
-  <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
-
-  <!--
-  <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
-  <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
+TO DO: investigate why localsite.js seem to load map-display.css 
  -->
 
-  <meta name="description" content="35 billion dollar storms caused 389.5 billion in damage (US dollars) in the last 6 years, 
+<!--
+<meta name="description" content="35 billion dollar storms caused 389.5 billion in damage (US dollars) in the last 6 years, 
 averaging 65 billion per year - a significant increase from the prior average of 10 billion per year">
-  <meta name="keywords" content="Total damage from storms, cyclones, hurricanes, tropical depressions.">
+-->
+<meta name="keywords" content="Total damage from storms, cyclones, hurricanes, tropical depressions.">
+
+<script>
+var sidebarMinWidth = 220;
+var sidebarWideDefault = 240;
+var sidebarMaxRatio = 0.55;
+var lastWideSidebarWidth = sidebarWideDefault;
+
+window.onload=function(){
+  initImpactLayout();
+}
+
+function getImpactLayoutWidth() {
+  var layoutShell = document.getElementById('impactLayout');
+  if (!layoutShell) {
+    return 0;
+  }
+  return layoutShell.clientWidth || (layoutShell.parentElement ? layoutShell.parentElement.clientWidth : 0) || window.innerWidth || 0;
+}
+
+function getSidebarMaxWidth() {
+  return Math.max(sidebarMinWidth, Math.floor(getImpactLayoutWidth() * sidebarMaxRatio));
+}
+
+function setSidebarWidth(width) {
+  var resizable = document.getElementById('resizable');
+  if (!resizable) {
+    return;
+  }
+
+  var clampedWidth = Math.max(sidebarMinWidth, Math.min(width, getSidebarMaxWidth()));
+  lastWideSidebarWidth = clampedWidth;
+  resizable.style.width = clampedWidth + 'px';
+}
+
+function updateImpactLayout() {
+  var layoutShell = document.getElementById('impactLayout');
+  var resizable = document.getElementById('resizable');
+  if (!layoutShell || !resizable) {
+    return;
+  }
+
+  var isNarrow = layoutShell.clientWidth < 980;
+  layoutShell.classList.toggle('is-narrow', isNarrow);
+
+  if (isNarrow) {
+    resizable.style.width = '100%';
+    return;
+  }
+
+  setSidebarWidth(lastWideSidebarWidth || sidebarWideDefault);
+}
+
+function initImpactLayout() {
+  var resizer = document.getElementById('resizer');
+  var resizable = document.getElementById('resizable');
+  var iframe = document.querySelector('.iframe');
+  var layoutShell = document.getElementById('impactLayout');
+  var isDragging = false;
+
+  if (!resizer || !resizable || !iframe || !layoutShell) {
+    return;
+  }
+
+  updateImpactLayout();
+
+  if (typeof ResizeObserver === 'function') {
+    var layoutObserver = new ResizeObserver(updateImpactLayout);
+    layoutObserver.observe(layoutShell);
+  } else {
+    window.addEventListener('resize', updateImpactLayout);
+  }
+
+  function getClientX(event) {
+    if (event.touches && event.touches.length) {
+      return event.touches[0].clientX;
+    }
+    if (event.changedTouches && event.changedTouches.length) {
+      return event.changedTouches[0].clientX;
+    }
+    return event.clientX;
+  }
+
+  function updateDragWidth(event) {
+    var x = getClientX(event) - resizable.getBoundingClientRect().left;
+    setSidebarWidth(x);
+  }
+
+  function startDrag(event) {
+    if (layoutShell.classList.contains('is-narrow')) {
+      return;
+    }
+
+    isDragging = true;
+    iframe.style.pointerEvents = 'none';
+    document.body.classList.add('is-resizing');
+    updateDragWidth(event);
+
+    event.preventDefault();
+  }
+
+  function moveDrag(event) {
+    if (!isDragging) {
+      return;
+    }
+    updateDragWidth(event);
+    event.preventDefault();
+  }
+
+  function endDrag() {
+    if (!isDragging) {
+      return;
+    }
+    isDragging = false;
+    iframe.style.pointerEvents = 'auto';
+    document.body.classList.remove('is-resizing');
+  }
+
+  resizer.addEventListener('mousedown', startDrag);
+  document.addEventListener('mousemove', moveDrag);
+  document.addEventListener('mouseup', endDrag);
+  resizer.addEventListener('touchstart', startDrag, { passive: false });
+  document.addEventListener('touchmove', moveDrag, { passive: false });
+  document.addEventListener('touchend', endDrag);
+  document.addEventListener('touchcancel', endDrag);
+}
+
+loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
+//loadMarkdown("README.md", "readmeDiv", "parentframe");
+
+
+waitForElm("#slider-pips").then(() => {
+   
+    // Slider: https://refreshless.com/nouislider/
+    // Also dot style: https://jsfiddle.net/leongersen/9hyfv0bw/11/
+
+    // Also see: Preact Slider https://codepen.io/avol/pen/LyovJb
+
+    var pipsSlider = document.getElementById('slider-pips');
+
+    noUiSlider.create(pipsSlider, {
+        range: {
+            min: 0,
+            max: 24
+        },
+        start: [12],
+        pips: {mode: 'count', values: 9}
+    });
+
+    var pips = pipsSlider.querySelectorAll('.noUi-value');
+
+    function clickOnPip() {
+        var value = Number(this.getAttribute('data-value'));
+        pipsSlider.noUiSlider.set(value);
+    }
+
+    for (var i = 0; i < pips.length; i++) {
+
+        // For this example. Do this in CSS!
+        pips[i].style.cursor = 'pointer';
+        pips[i].addEventListener('click', clickOnPip);
+    }
+});
+
+</script>
 
 <style>
+  body {
+    margin: 0px;
+  }
+  body.is-resizing {
+    cursor: ew-resize;
+    user-select: none;
+  }
+  #impactLayout {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #impactLayout.is-narrow {
+    display: block;
+  }
+  #resizable {
+    position: relative;
+    flex: 0 0 auto;
+    width: 240px;
+    margin: 20px 0 0 40px;
+    padding-right: 18px;
+    box-sizing: border-box;
+  }
+  #sideDiv {
+    font-size: 12px;
+  }
+  #resizer {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    width: 18px;
+    cursor: ew-resize;
+  }
+  #resizer:before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 8px;
+    width: 2px;
+    border-radius: 999px;
+    background: #c9d3dc;
+  }
+  #mainarea {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0px;
+    min-height: 100vh;
+    padding: 20px 40px 40px 0;
+    box-sizing: border-box;
+  }
+  #displayPanel {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+  }
   #rightColumn {
     float:right;
-    width:350px; margin-left:40px; font-size:14px
+    width:350px;
+    margin-left:40px;
+    font-size:14px;
   }
-  @media (max-width: 800px) {
-    #rightColumn {
-      float:none !important;
-      margin:0px;
-      margin-bottom:20px;
-    }
+  #impactLayout.is-narrow #rightColumn {
+    float:none !important;
+    width:auto;
+    margin:0 0 20px;
   }
   iframe {
+    display: block;
+    width: 100%;
     min-height: 600px;
+    border: 0px;
+    background: #efefef;
   }
   @media (max-width: 600px) {
       iframe {
           min-height: 40vh;
       }
   }
+  #slider-pips {
+    position: absolute;
+    right: 20px;
+    bottom: 48px;
+    min-width: 300px;
+    max-width: calc(100% - 40px);
+    height: 12px;
+    background-color: rgba(0,0,0,.5);
+    z-index: 2;
+  }
+  .noUi-marker-horizontal.noUi-marker-large {
+    height: 10px;
+    opacity: .8;
+    margin-top: -4px;
+  }
+  .noUi-marker-normal {
+    display: none;
+  }
+  #impactLayout.is-narrow #resizable {
+    width: auto;
+    margin: 20px 20px 0;
+    padding-right: 0px;
+  }
+  #impactLayout.is-narrow #resizer {
+    display: none;
+  }
+  #impactLayout.is-narrow #mainarea {
+    min-height: 0px;
+    padding: 20px;
+  }
+  .dark #resizer:before {
+    background: #5d6974;
+  }
+  .dark iframe {
+    background: #1e242a;
+  }
+  .dark #slider-pips {
+    background-color: rgba(10,16,22,.7);
+  }
+  #impactNav {
+    padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d8e0e8;
+  }
+  .dark #impactNav {
+    border-bottom-color: #42505d;
+  }
 </style>
 </head>
 
-<body style="margin:0px">
+<body>
 
+<section id="impactNav">
+    <a target="_blank" href="/"><img src="img/logo/favicon.png" style="width:18px;margin-right:8px"></a>
+    <a href="../tracker/">Strom Tracker</a> | 
+    <a href="./">Mobility Impact</a> | 
+    <a href="charts">Storm Stats</a> | 
+    <a href="cities.html">City Boundaries</a> | 
+    <a href="process.html">Data Processing</a> | 
+    <a href="charts.html">Impact&nbsp;Charts</a> |
+    <a href="refinements.html">Refinements</a>
+</section>
+
+<div id="impactLayout">
+
+<div id="resizable">
+  <!--
+  <a href="/"><img class="headerLogo" src="/community/hubs/img/planet.live.png" style="height:40px" /></a>
+  -->
+  
+  <div id="sideDiv"></div>
+  <div id="resizer"></div>
+</div>
+
+<div id="mainarea">
 <!--
   <iframe width="100%" height="520" frameborder="0" src="https://georgia-map.carto.com/viz/9dcea1a6-1700-419f-b9a7-eb5d7d08935e/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 -->
-
- <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%"></iframe><br>
+<div id="displayPanel">
+ <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-67.66,31.71,913" class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
+ <div id="slider-pips"></div>
+</div>
 
 <!--
 <div style="floatX:right" class="hideMobileX">
@@ -63,16 +360,7 @@ averaging 65 billion per year - a significant increase from the prior average of
 </div>
 -->
 
-<section class="main-contentX topnavbarX content contentpadding" style="padding-bottom:0px">
-    <a target="_blank" href="/"><img src="img/logo/favicon.png" style="width:18px;float:left; margin-right:8px"></a>
-    <a target="_blank" href="../tracker/">Strom Tracker</a> | 
-    <a target="_blank" href="./">Mobility Impact</a> | 
-    <a target="_blank" href="charts">Storm Stats</a> | 
-    <a target="_blank" href="cities.html">City Boundaries</a> | 
-    <a target="_blank" href="process.html">Data Processing</a> | 
-    <a target="_blank" href="charts.html">Impact&nbsp;Charts</a> |
-    <a target="_blank" href="refinements.html">Refinements</a>
-</section>
+
 <!--
 <div class="spaceAtTop">
 </div>
@@ -221,9 +509,12 @@ average of 65 billion per year globally. (This is a fraction of the total damage
 <div class="content contentpadding">
   <h3 style="margin-bottom: 0px;">ModelEarth Project Framework</h3><br>
   <a href="/">Model.earth</a> is open source for <a href="/io/communities/">government automation</a>, <a href="/localsite/info/">supply-chain optimization</a> and <a href="/io/learn/">graduate thesis work</a>.<br>
-  Our storm mobility analysis by <a href="https://dreamstudio.com/resume">Loren Heyns</a> expands on <a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 study</a> by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a><br>
+  The storm mobility analysis by <a href="https://dreamstudio.com/loren">Loren Heyns</a> expands on <a target="_blank" href="https://www.sciencedirect.com/science/article/pii/S1877705815021906">2013-2015 study</a> by <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=laFXAoIAAAAJ&view_op=list_works&sortby=pubdate">Qi Ryan Wang</a> and <a target="_blank" href="https://scholar.google.com/citations?user=KEBU2PQAAAAJ&hl=en&oi=ao">John&nbsp;E&nbsp;Taylor</a><br>
 
   <br>
+</div>
+
+</div>
 </div>
 
 </body>

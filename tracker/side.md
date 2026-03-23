@@ -1,3 +1,4 @@
+<!--
 <h1 style="font-size:24px">Storm Tracker</h1>
 
 <span style="font-size: 14px">
@@ -8,8 +9,9 @@
 [Pacific](https://earth.nullschool.net/#current/wind/surface/level/orthographic=-204.43,22.60,806) | 
 [Whole Earth](https://earth.nullschool.net/#current/wind/surface/level/orthographic=-59.66,0.34,464) 
 </span>
+-->
 
-## 2013-2020  
+### 2013-2020  
 
 <!--
 	Super Cyclonic Storm Amphan churning through the Bay of Bengal, as modeled by the GFS. The cyclone is expected to make landfall on the border between India and Bangladesh.
