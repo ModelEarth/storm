@@ -11,8 +11,8 @@
 <link href="/localsite/css/base.css" id="/localsite/css/base.css" rel="stylesheet" type="text/css" >
 <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
-<script type="text/javascript" src="../tracker/js/nouislider.min.js"></script>
-<link rel="stylesheet" href="../tracker/css/nouislider.min.css" />
+<script type="text/javascript" src="../../localsite/js/nouislider.min.js"></script>
+<link rel="stylesheet" href="../../localsite/css/nouislider.min.css" />
 
   <!--
 TO DO: investigate why localsite.js seem to load map-display.css 
@@ -120,7 +120,9 @@ function toggleImpactSidebar(forceState) {
 }
 
 function getImpactPageHashString() {
-  return normalizeImpactHashString(window.location.hash ? window.location.hash.substring(1) : '');
+  var hash = (typeof getHash === 'function') ? getHash() : {};
+  var hashValue = (hash && (hash.earth || hash[""])) || (window.location.hash ? window.location.hash.substring(1) : '');
+  return normalizeImpactHashString(hashValue);
 }
 
 function normalizeImpactHashString(hashString) {
@@ -140,7 +142,14 @@ function normalizeImpactHashString(hashString) {
     normalized = normalized.replace(/^https?:\/\/earth\.nullschool\.net\/?#?/i, '');
   }
 
-  if (normalized.indexOf('&') !== -1) {
+  if (normalized.indexOf('earth=') !== -1) {
+    var earthPair = normalized.split('&').find(function(part) {
+      return /^earth=/i.test(part);
+    });
+    if (earthPair) {
+      normalized = earthPair.substring(earthPair.indexOf('=') + 1);
+    }
+  } else if (normalized.indexOf('&') !== -1) {
     normalized = normalized.split('&')[0];
   }
 
@@ -167,10 +176,10 @@ function setImpactHashString(hashString) {
   var nextHash = normalizeImpactHashString(hashString);
   syncImpactIframeHash(nextHash);
   if (typeof go === 'function') {
-    go({'': nextHash});
+    go({'earth': nextHash});
     return;
   }
-  goHash({'': nextHash});
+  goHash({'earth': nextHash});
 }
 
 function getImpactDefaultRestPath() {
@@ -192,41 +201,6 @@ function getImpactCurrentUtcDate() {
 
 function roundImpactHourToStep(hour) {
   return Math.floor(hour / impactPlaybackStepHours) * impactPlaybackStepHours;
-}
-
-function formatImpactHourLabel(hourValue) {
-  var hour = Number(hourValue);
-  if (impactUseMilitaryTime) {
-    return String(hour).padStart(2, '0') + ':00';
-  }
-
-  if (hour === 0 || hour === 24) {
-    return '12am';
-  }
-  if (hour === 12) {
-    return '12pm';
-  }
-  if (hour < 12) {
-    return hour + 'am';
-  }
-  return (hour - 12) + 'pm';
-}
-
-function refreshImpactSliderLabels(pipsSlider) {
-  if (!pipsSlider) {
-    return;
-  }
-
-  var pips = pipsSlider.querySelectorAll('.noUi-value');
-  for (var i = 0; i < pips.length; i++) {
-    var pipValue = Number(pips[i].getAttribute('data-value'));
-    pips[i].textContent = formatImpactHourLabel(pipValue);
-    if (pipValue === 3) {
-      pips[i].classList.add('impact-first-pip');
-    } else {
-      pips[i].classList.remove('impact-first-pip');
-    }
-  }
 }
 
 function getImpactHashState(hashString) {
@@ -341,30 +315,13 @@ function updateImpactSliderFromHash() {
   }
 }
 
-function updateImpactPlayPauseButton() {
-  var button = document.getElementById('impactPlayPauseButton');
-  if (!button) {
-    return;
-  }
-
-  var icon = button.querySelector('.material-icons');
-  if (!icon) {
-    return;
-  }
-
-  var isPlaying = !!impactPlaybackTimer;
-  icon.textContent = isPlaying ? 'pause' : 'play_arrow';
-  button.setAttribute('aria-label', isPlaying ? 'Pause map playback' : 'Play map playback');
-  button.setAttribute('title', isPlaying ? 'Pause map playback' : 'Play map playback');
-}
-
 function stopImpactPlayback() {
   if (impactPlaybackTimer) {
     clearInterval(impactPlaybackTimer);
     impactPlaybackTimer = null;
   }
   impactPlaybackStepCount = 0;
-  updateImpactPlayPauseButton();
+  updateEarthPlayPauseButton(false);
 }
 
 function advanceImpactPlaybackStep() {
@@ -395,7 +352,7 @@ function startImpactPlayback() {
   impactPlaybackTimer = window.setInterval(function() {
     advanceImpactPlaybackStep();
   }, impactPlaybackInterval);
-  updateImpactPlayPauseButton();
+  updateEarthPlayPauseButton(true);
 }
 
 function toggleImpactPlayback() {
@@ -406,176 +363,21 @@ function toggleImpactPlayback() {
   }
 }
 
-function ensureImpactPlayPauseButton() {
-  waitForElm('#headerIcons').then(() => {
-    var headerIcons = document.querySelector('#upIconTray #headerIcons') || document.getElementById('headerIcons');
-    if (!headerIcons || document.getElementById('impactPlayPauseButton')) {
-      updateImpactPlayPauseButton();
-      return;
-    }
-
-    var button = document.createElement('div');
-    button.id = 'impactPlayPauseButton';
-    button.className = 'playPauseButton topButton';
-    button.setAttribute('role', 'button');
-    button.setAttribute('tabindex', '0');
-    button.innerHTML = '<i class="material-icons" style="font-size:36px;cursor:pointer">play_arrow</i>';
-    headerIcons.prepend(button);
-
-    button.addEventListener('click', function(event) {
-      toggleImpactPlayback();
-      event.preventDefault();
-      event.stopPropagation();
-    });
-    button.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' || event.key === ' ') {
-        toggleImpactPlayback();
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    });
-
-    updateImpactPlayPauseButton();
-  });
-}
-
 function setupImpactSlider() {
-  waitForElm('#slider-pips').then(() => {
-    var pipsSlider = document.getElementById('slider-pips');
-    var sliderGapHitArea = document.getElementById('slider-pips-gap-hit-area');
-    var leftHitArea = document.getElementById('slider-pips-hit-left');
-    var rightHitArea = document.getElementById('slider-pips-hit-right');
-    var sliderBase;
-    if (!pipsSlider || pipsSlider.noUiSlider) {
+  setupGlobalMapSlider(impactIframeBaseUrl + '#' + impactDefaultMapHash, {
+    containerId: 'earthDisplay',
+    stepHours: impactPlaybackStepHours,
+    stopPlayback: stopImpactPlayback,
+    togglePlayback: toggleImpactPlayback,
+    onSliderSet: function(hour) {
+      if (impactUpdatingSliderFromHash) return;
+      stopImpactPlayback();
+      setImpactHashString(buildImpactHashForSliderHour(hour));
+    },
+    onSliderReady: function(pipsSlider) {
       impactSlider = pipsSlider;
       updateImpactSliderFromHash();
-      return;
     }
-
-    noUiSlider.create(pipsSlider, {
-      range: {
-        min: 3,
-        max: 24
-      },
-      start: [12],
-      step: impactPlaybackStepHours,
-      pips: {mode: 'values', values: [3, 6, 9, 12, 15, 18, 21, 24]}
-    });
-
-    impactSlider = pipsSlider;
-    sliderBase = pipsSlider.querySelector('.noUi-base');
-    refreshImpactSliderLabels(pipsSlider);
-
-    var pips = pipsSlider.querySelectorAll('.noUi-value');
-    function clickOnPip() {
-      stopImpactPlayback();
-      var value = Number(this.getAttribute('data-value'));
-      pipsSlider.noUiSlider.set(value);
-    }
-
-    function getPointerClientX(event) {
-      if (event.touches && event.touches.length) {
-        return event.touches[0].clientX;
-      }
-      if (event.changedTouches && event.changedTouches.length) {
-        return event.changedTouches[0].clientX;
-      }
-      return event.clientX;
-    }
-
-    function getImpactSliderStepValue(rawValue) {
-      var minValue = 3;
-      var maxValue = 24;
-      var clampedValue = Math.max(minValue, Math.min(maxValue, rawValue));
-      var steppedValue = Math.round((clampedValue - minValue) / impactPlaybackStepHours) * impactPlaybackStepHours + minValue;
-      return Math.max(minValue, Math.min(maxValue, steppedValue));
-    }
-
-    function setImpactSliderFromPointer(event) {
-      if (!sliderBase) {
-        return;
-      }
-
-      var rect = sliderBase.getBoundingClientRect();
-      if (!rect.width) {
-        return;
-      }
-
-      var pointerX = getPointerClientX(event);
-      var ratio = (pointerX - rect.left) / rect.width;
-      var rawValue = 3 + (Math.max(0, Math.min(1, ratio)) * (24 - 3));
-
-      stopImpactPlayback();
-      pipsSlider.noUiSlider.set(getImpactSliderStepValue(rawValue));
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
-    for (var i = 0; i < pips.length; i++) {
-      pips[i].style.cursor = 'pointer';
-      pips[i].addEventListener('click', clickOnPip);
-    }
-
-    function jumpToSliderEdge(value, event) {
-      stopImpactPlayback();
-      pipsSlider.noUiSlider.set(value);
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
-
-    if (leftHitArea) {
-      leftHitArea.addEventListener('mousedown', function(event) {
-        jumpToSliderEdge(3, event);
-      });
-      leftHitArea.addEventListener('touchstart', function(event) {
-        jumpToSliderEdge(3, event);
-      }, { passive: false });
-    }
-
-    if (rightHitArea) {
-      rightHitArea.addEventListener('mousedown', function(event) {
-        jumpToSliderEdge(24, event);
-      });
-      rightHitArea.addEventListener('touchstart', function(event) {
-        jumpToSliderEdge(24, event);
-      }, { passive: false });
-    }
-
-    if (sliderBase) {
-      sliderBase.addEventListener('mousedown', function(event) {
-        if (!event.target.closest('.noUi-handle')) {
-          setImpactSliderFromPointer(event);
-        }
-      });
-      sliderBase.addEventListener('touchstart', function(event) {
-        if (!event.target.closest('.noUi-handle')) {
-          setImpactSliderFromPointer(event);
-        }
-      }, { passive: false });
-    }
-
-    if (sliderGapHitArea) {
-      sliderGapHitArea.addEventListener('mousedown', setImpactSliderFromPointer);
-      sliderGapHitArea.addEventListener('touchstart', setImpactSliderFromPointer, { passive: false });
-    }
-
-    pipsSlider.addEventListener('mousedown', stopImpactPlayback);
-    pipsSlider.addEventListener('touchstart', stopImpactPlayback, { passive: true });
-
-    pipsSlider.noUiSlider.on('start', function() {
-      stopImpactPlayback();
-    });
-    pipsSlider.noUiSlider.on('set', function(values) {
-      if (impactUpdatingSliderFromHash) {
-        return;
-      }
-      stopImpactPlayback();
-      setImpactHashString(buildImpactHashForSliderHour(Number(values[0])));
-    });
-
-    updateImpactSliderFromHash();
   });
 }
 
@@ -616,19 +418,18 @@ function updateImpactLayout() {
 function initImpactLayout() {
   var resizer = document.getElementById('resizer');
   var resizable = document.getElementById('resizable');
-  var displayPanel = document.getElementById('displayPanel');
+  var earthDisplay = document.getElementById('earthDisplay');
   var iframe = document.querySelector('.iframe');
   var layoutShell = document.getElementById('impactLayout');
   var sidebarToggle = document.getElementById('impactSidebarToggle');
   var isDragging = false;
 
-  if (!resizer || !resizable || !displayPanel || !iframe || !layoutShell || !sidebarToggle) {
+  if (!resizer || !resizable || !earthDisplay || !iframe || !layoutShell || !sidebarToggle) {
     return;
   }
 
   updateImpactLayout();
   setupImpactSlider();
-  ensureImpactPlayPauseButton();
 
   if (typeof ResizeObserver === 'function') {
     var layoutObserver = new ResizeObserver(updateImpactLayout);
@@ -717,8 +518,8 @@ function initImpactLayout() {
     syncImpactIframeHash();
     updateImpactSliderFromHash();
   }, false);
-  displayPanel.addEventListener('mousedown', stopImpactPlayback);
-  displayPanel.addEventListener('touchstart', stopImpactPlayback, { passive: true });
+  earthDisplay.addEventListener('mousedown', stopImpactPlayback);
+  earthDisplay.addEventListener('touchstart', stopImpactPlayback, { passive: true });
   iframe.addEventListener('mousedown', stopImpactPlayback);
   iframe.addEventListener('touchstart', stopImpactPlayback, { passive: true });
   window.addEventListener('blur', function() {
@@ -736,6 +537,14 @@ function initImpactLayout() {
 
 loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
 //loadMarkdown("README.md", "readmeDiv", "parentframe");
+
+// Override zoomEarth hash behavior: update the full earth URL fragment in the page hash
+window.onEarthZoom = function(orthographic, earthUrl) {
+  var hashFragment = earthUrl.split('#')[1] || '';
+  var nextHash = normalizeImpactHashString(hashFragment);
+  impactLastIframeHash = nextHash; // Prevent syncImpactIframeHash from reloading
+  goHash({'earth': nextHash});
+};
 
 </script>
 
@@ -838,7 +647,7 @@ loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
     padding: 20px 40px 40px 0;
     box-sizing: border-box;
   }
-  #displayPanel {
+  #earthDisplay {
     position: relative;
     border-radius: 24px;
     overflow: hidden;
@@ -866,96 +675,7 @@ loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
           min-height: 40vh;
       }
   }
-  #slider-pips-wrap {
-    position: absolute;
-    right: 10px;
-    bottom: 48px;
-    width: min(370px, calc(100% - 20px));
-    height: 32px;
-    z-index: 2;
-    pointer-events: none;
-  }
-  #slider-pips {
-    position: absolute;
-    right: 10px;
-    bottom: 0px;
-    width: calc(100% - 20px);
-    height: 12px;
-    background-color: rgba(0,0,0,.5);
-    pointer-events: auto;
-  }
-  #slider-pips-gap-hit-area {
-    position: absolute;
-    right: 10px;
-    bottom: -6px;
-    width: calc(100% - 20px);
-    height: 18px;
-    z-index: 2;
-    pointer-events: auto;
-  }
-  .slider-pips-hit-area {
-    position: absolute;
-    bottom: 0px;
-    height: 12px;
-    width: 10px;
-    z-index: 3;
-    pointer-events: auto;
-  }
-  #slider-pips-hit-left {
-    left: 0px;
-  }
-  #slider-pips-hit-right {
-    right: 0px;
-  }
-  #slider-pips .noUi-value {
-    color: #fff;
-    font-size: 12px;
-    min-width: 28px;
-    margin-left: -14px;
-    text-align: center;
-    white-space: nowrap;
-    transform: translateX(-10px);
-  }
-  #slider-pips .noUi-value.impact-first-pip {
-    margin-left: 0px;
-    text-align: left;
-  }
-  #slider-pips .noUi-value[data-value="6"],
-  #slider-pips .noUi-value[data-value="9"],
-  #slider-pips .noUi-value[data-value="12"],
-  #slider-pips .noUi-value[data-value="15"],
-  #slider-pips .noUi-value[data-value="18"],
-  #slider-pips .noUi-value[data-value="21"] {
-    transform: translateX(0px);
-  }
-  #slider-pips .noUi-pips-horizontal {
-    padding-top: 5px;
-    height: 75px;
-  }
-  #slider-pips .noUi-handle {
-    height: 17px;
-    top: -3px;
-  }
-  #slider-pips .noUi-touch-area {
-    height: 17px;
-  }
-  #slider-pips.impact-slider-no-motion .noUi-origin,
-  #slider-pips.impact-slider-no-motion .noUi-connect {
-    transition: none !important;
-  }
-  #slider-pips .noUi-handle:before,
-  #slider-pips .noUi-handle:after {
-    height: 9px;
-    top: 4px;
-  }
-  .noUi-marker-horizontal.noUi-marker-large {
-    height: 10px;
-    opacity: .8;
-    margin-top: -4px;
-  }
-  .noUi-marker-normal {
-    display: none;
-  }
+  /* slider-pips CSS now injected by createSliderPipsWrap() in localsite.js */
   #impactLayout.is-narrow #resizable {
     width: auto;
     margin: 20px 20px 0;
@@ -992,9 +712,7 @@ loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
   .dark iframe {
     background: #1e242a;
   }
-  .dark #slider-pips {
-    background-color: rgba(10,16,22,.7);
-  }
+  /* .dark #slider-pips now in injected CSS */
   #impactNav {
     padding-left: 20px;
     padding-top: 10px;
@@ -1017,32 +735,8 @@ loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
   #impactNav.nav-collapsed #impactNavLinks {
     display: none;
   }
-  #impactPlayPauseButton {
-    display: none;
-  }
-  body.storm-impact-page #upIconTray #headerIcons .playPauseButton {
-    display: block;
-    float: left;
-    margin-left: -10px;
-    padding-top: 7px;
-    padding-bottom: 4px;
-    color: #aaa;
-  }
-  body.storm-impact-page #upIconTray #headerIcons .playPauseButton:hover,
-  body.storm-impact-page #upIconTray #headerIcons .playPauseButton:focus {
-    color: #333;
-  }
-  body.storm-impact-page #upIconTray #headerIcons .playPauseButton .material-icons {
-    font-size: 36px;
-    cursor: pointer;
-    transform: translate(-3px, 1px);
-  }
   .dark #impactNav {
     border-bottom-color: #42505d;
-  }
-  body.dark.storm-impact-page #upIconTray #headerIcons .playPauseButton:hover,
-  body.dark.storm-impact-page #upIconTray #headerIcons .playPauseButton:focus {
-    color: #fff;
   }
 </style>
 </head>
@@ -1085,15 +779,10 @@ loadMarkdown("../tracker/side.md", "sideDiv", "parentframe");
 <!--
   <iframe width="100%" height="520" frameborder="0" src="https://georgia-map.carto.com/viz/9dcea1a6-1700-419f-b9a7-eb5d7d08935e/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 -->
-<div id="displayPanel">
+<div id="earthDisplay">
  <div id="mapToggleAnchor" class="impactToggleAnchor"></div>
  <iframe class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
- <div id="slider-pips-wrap">
-  <div id="slider-pips-gap-hit-area"></div>
-  <div id="slider-pips-hit-left" class="slider-pips-hit-area"></div>
-  <div id="slider-pips"></div>
-  <div id="slider-pips-hit-right" class="slider-pips-hit-area"></div>
- </div>
+ <!-- #slider-pips-wrap and .earth-zoom-controls injected by createSliderPipsWrap / createEarthZoomControls -->
 </div>
 
 <!--
