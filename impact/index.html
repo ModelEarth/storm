@@ -38,7 +38,7 @@ var impactTopNavVisible = true;
 var impactSlider = null;
 var impactPlaybackTimer = null;
 var impactPlaybackStepHours = 3;
-var impactPlaybackInterval = 3000;
+var impactPlaybackInterval = Number(localStorage.getItem('earthPlaybackIntervalMs') || 3000);
 var impactPlaybackMaxSteps = (24 / impactPlaybackStepHours) * 2;
 var impactPlaybackStepCount = 0;
 var impactUseMilitaryTime = false;
@@ -344,6 +344,13 @@ function startImpactPlayback() {
     return;
   }
 
+  var startState = getImpactHashState();
+  if (!startState.isDated) {
+    var seedDate = new Date(getImpactCurrentUtcDate().getTime() - 48 * 3600 * 1000);
+    seedDate.setUTCHours(Math.floor(seedDate.getUTCHours() / impactPlaybackStepHours) * impactPlaybackStepHours);
+    setImpactHashString(formatImpactHashFromDate(seedDate, startState.restPath));
+  }
+
   impactPlaybackStepCount = 0;
   advanceImpactPlaybackStep();
   if (impactPlaybackStepCount >= impactPlaybackMaxSteps) {
@@ -353,6 +360,17 @@ function startImpactPlayback() {
     advanceImpactPlaybackStep();
   }, impactPlaybackInterval);
   updateEarthPlayPauseButton(true);
+}
+
+function setImpactPlaybackInterval(intervalMs) {
+  impactPlaybackInterval = Math.max(250, Number(intervalMs) || 3000);
+  localStorage.setItem('earthPlaybackIntervalMs', String(impactPlaybackInterval));
+  if (impactPlaybackTimer) {
+    clearInterval(impactPlaybackTimer);
+    impactPlaybackTimer = window.setInterval(function() {
+      advanceImpactPlaybackStep();
+    }, impactPlaybackInterval);
+  }
 }
 
 function toggleImpactPlayback() {
@@ -369,6 +387,12 @@ function setupImpactSlider() {
     stepHours: impactPlaybackStepHours,
     stopPlayback: stopImpactPlayback,
     togglePlayback: toggleImpactPlayback,
+    getPlaybackInterval: function() {
+      return impactPlaybackInterval;
+    },
+    setPlaybackInterval: function(intervalMs) {
+      setImpactPlaybackInterval(intervalMs);
+    },
     onSliderSet: function(hour) {
       if (impactUpdatingSliderFromHash) return;
       stopImpactPlayback();
@@ -549,6 +573,10 @@ window.onEarthZoom = function(orthographic, earthUrl) {
 </script>
 
 <style>
+  #slider-on-map {
+    bottom: 60px;
+  }
+  /*
   body {
     margin: 0px;
   }
@@ -556,6 +584,7 @@ window.onEarthZoom = function(orthographic, earthUrl) {
     cursor: ew-resize;
     user-select: none;
   }
+  */
   #impactLayout {
     position: relative;
     display: flex;
@@ -779,7 +808,7 @@ window.onEarthZoom = function(orthographic, earthUrl) {
 <!--
   <iframe width="100%" height="520" frameborder="0" src="https://georgia-map.carto.com/viz/9dcea1a6-1700-419f-b9a7-eb5d7d08935e/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
 -->
-<div id="earthDisplay">
+<div id="earthDisplay" class="earthDisplay">
  <div id="mapToggleAnchor" class="impactToggleAnchor"></div>
  <iframe class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
  <!-- #slider-pips-wrap and .earth-zoom-controls injected by createSliderPipsWrap / createEarthZoomControls -->
