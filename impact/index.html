@@ -38,7 +38,7 @@ var impactTopNavVisible = true;
 var impactSlider = null;
 var impactPlaybackTimer = null;
 var impactPlaybackStepHours = 3;
-var impactPlaybackInterval = Number(localStorage.getItem('earthPlaybackIntervalMs') || 3000);
+var impactPlaybackInterval = Math.max(1000, Number(localStorage.getItem('earthPlaybackIntervalMs') || 3000)); // 1 sec is the fastest, since each step reloads the map
 var impactPlaybackMaxSteps = (24 / impactPlaybackStepHours) * 2;
 var impactPlaybackStepCount = 0;
 var impactUseMilitaryTime = false;
@@ -169,7 +169,12 @@ function syncImpactIframeHash(hashString) {
   }
 
   impactLastIframeHash = nextHash;
-  iframe.src = impactIframeBaseUrl + '#' + nextHash;
+  if (typeof loadIframe === 'function') {
+    // loadIframe() in localsite.js reloads the map with a new ?reload= value, since nullschool doesn't redraw for a #hash-only change
+    loadIframe('mainframe', impactIframeBaseUrl + '#' + nextHash);
+  } else {
+    iframe.src = impactIframeBaseUrl + '#' + nextHash;
+  }
 }
 
 function setImpactHashString(hashString) {
@@ -363,7 +368,7 @@ function startImpactPlayback() {
 }
 
 function setImpactPlaybackInterval(intervalMs) {
-  impactPlaybackInterval = Math.max(250, Number(intervalMs) || 3000);
+  impactPlaybackInterval = Math.max(1000, Number(intervalMs) || 3000);
   localStorage.setItem('earthPlaybackIntervalMs', String(impactPlaybackInterval));
   if (impactPlaybackTimer) {
     clearInterval(impactPlaybackTimer);
