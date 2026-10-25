@@ -14,6 +14,9 @@
 <script type="text/javascript" src="../../localsite/js/nouislider.min.js"></script>
 <link rel="stylesheet" href="../../localsite/css/nouislider.min.css" />
 
+<script type="text/javascript" src="../../localsite/js/earth-filters.js"></script>
+<link rel="stylesheet" href="../../localsite/css/earth-filters.css" />
+
   <!--
 TO DO: investigate why localsite.js seem to load map-display.css 
  -->
@@ -44,6 +47,7 @@ var impactPlaybackStepCount = 0;
 var impactUseMilitaryTime = false;
 var impactUpdatingSliderFromHash = false;
 var impactLastSliderVisualHour = null;
+var impactEarthFilters = null;
 
 window.onload=function(){
   initImpactLayout();
@@ -410,6 +414,26 @@ function setupImpactSlider() {
   });
 }
 
+// The earth.nullschool.net menu filters under the map send their choices to the map's #hash
+function setupImpactEarthFilters() {
+  var filtersDiv = document.getElementById('earthFilters');
+  if (!filtersDiv || typeof EarthFilters === 'undefined') {
+    return;
+  }
+  impactEarthFilters = EarthFilters.create(filtersDiv, {
+    hash: getImpactPageHashString(),
+    onChange: function(hash, filters) {
+      stopImpactPlayback();
+      if (filters.getBaseUrl() !== impactIframeBaseUrl) {
+        impactIframeBaseUrl = filters.getBaseUrl(); // A language change loads the map from that language's folder
+        impactLastIframeHash = '';
+      }
+      setImpactHashString(hash);
+    }
+  });
+  impactIframeBaseUrl = impactEarthFilters.getBaseUrl(); // The language saved from a prior visit
+}
+
 function updateImpactTopNav() {
   var impactNav = document.getElementById('impactNav');
   var toggle = document.getElementById('impactNavToggle');
@@ -458,6 +482,7 @@ function initImpactLayout() {
   }
 
   updateImpactLayout();
+  setupImpactEarthFilters(); // Before the slider, so the map loads in the saved language
   setupImpactSlider();
 
   if (typeof ResizeObserver === 'function') {
@@ -546,6 +571,9 @@ function initImpactLayout() {
   document.addEventListener('hashChangeEvent', function() {
     syncImpactIframeHash();
     updateImpactSliderFromHash();
+    if (impactEarthFilters) {
+      impactEarthFilters.setHash(getImpactPageHashString());
+    }
   }, false);
   earthDisplay.addEventListener('mousedown', stopImpactPlayback);
   earthDisplay.addEventListener('touchstart', stopImpactPlayback, { passive: true });
@@ -781,7 +809,7 @@ window.onEarthZoom = function(orthographic, earthUrl) {
 
 <body class="storm-impact-page">
 
-<section id="impactNav">
+<section id="impactNav" class="content-color">
     <span id="impactNavToggle" role="button" tabindex="0" aria-label="Hide top navigation" title="Hide top navigation"><img src="img/logo/favicon.png" alt="Toggle navigation"></span>
     <span id="impactNavLinks">
     <a href="../tracker/">Strom Tracker</a> | 
@@ -809,7 +837,7 @@ window.onEarthZoom = function(orthographic, earthUrl) {
   <a href="/"><img class="headerLogo" src="/community/hubs/img/planet.live.png" style="height:40px" /></a>
   -->
   
-  <div id="sideDiv"></div>
+  <div id="sideDiv" class="content-color"></div>
   <div id="resizer"></div>
 </div>
 
@@ -822,6 +850,8 @@ window.onEarthZoom = function(orthographic, earthUrl) {
  <iframe class="iframe" name="mainframe" id="mainframe" width="100%"></iframe>
  <!-- #slider-pips-wrap and .earth-zoom-controls injected by createSliderPipsWrap / createEarthZoomControls -->
 </div>
+<!-- #slider-full is inserted above the filters, directly after #earthDisplay -->
+<div id="earthFilters"></div>
 
 <!--
 <div style="floatX:right" class="hideMobileX">

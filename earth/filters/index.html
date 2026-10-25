@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+<title>Earth Filters</title>
+
+<link rel="stylesheet" href="../../../localsite/css/earth-filters.css">
+<script src="../../../localsite/js/earth-filters.js"></script>
+
+<!--
+Embeddable earth.nullschool.net filters.
+On its own, this page shows the map above the filters. Start with a nullschool hash: earth/filters/#current/ocean/surface/currents/overlay=sea_surface_temp
+In another page's iframe, it posts each change to the parent page instead of showing a map:
+  {type: 'earth-filters', hash: '...', url: 'https://earth.nullschool.net/#...'}
+  {type: 'earth-filters-height', height: 300}
+The parent page can send {type: 'earth-filters-set-hash', hash: '...'} to show the filters for a hash changed elsewhere.
+Pages on this site can skip the iframe and include localsite/js/earth-filters.js and localsite/css/earth-filters.css directly, as storm/impact/index.html does.
+-->
+
+<style>
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: system-ui, sans-serif;
+    background: #f9fafb;
+  }
+  body.ef-embedded {
+    padding: 0;
+    background: transparent;
+  }
+  body.ef-dark-page {
+    background: #000005;
+  }
+  #earthFrame {
+    display: block;
+    width: 100%;
+    height: 60vh;
+    min-height: 320px;
+    border: 0;
+    border-radius: 16px;
+    background: #1e242a;
+  }
+  #earthFilters {
+    max-width: 640px;
+  }
+  body.ef-embedded #earthFilters {
+    margin-top: 0;
+    max-width: none;
+  }
+</style>
+</head>
+
+<body>
+<iframe id="earthFrame" title="earth.nullschool.net map" hidden></iframe>
+<div id="earthFilters"></div>
+
+<script>
+(function() {
+  var isEmbedded = window.parent !== window;
+  var earthFrame = document.getElementById('earthFrame');
+  var filtersDiv = document.getElementById('earthFilters');
+  var lastFrameUrl = '';
+
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    filtersDiv.classList.add('ef-dark');
+    document.body.classList.add('ef-dark-page');
+  }
+  document.body.classList.toggle('ef-embedded', isEmbedded);
+
+  function showMap(filters) {
+    var url = filters.getUrl();
+    if (url === lastFrameUrl) {
+      return;
+    }
+    lastFrameUrl = url;
+    // nullschool doesn't redraw for a #hash-only change, so a new ?reload= value loads the map again
+    earthFrame.src = url.replace('#', '?reload=' + Date.now() + '#');
+  }
+
+  function postHeight() {
+    window.parent.postMessage({type: 'earth-filters-height', height: document.documentElement.scrollHeight}, '*');
+  }
+
+  var filters = EarthFilters.create(filtersDiv, {
+    hash: window.location.hash,
+    onChange: function(hash, filters) {
+      if (isEmbedded) {
+        window.parent.postMessage({type: 'earth-filters', hash: hash, url: filters.getUrl()}, '*');
+        return;
+      }
+      history.replaceState(null, '', '#' + hash);
+      showMap(filters);
+    }
+  });
+
+  if (isEmbedded) {
+    window.addEventListener('message', function(event) {
+      if (event.source === window.parent && event.data && event.data.type === 'earth-filters-set-hash') {
+        filters.setHash(event.data.hash);
+      }
+    });
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(postHeight).observe(document.body);
+    }
+    postHeight();
+  } else {
+    earthFrame.hidden = false;
+    showMap(filters);
+    window.addEventListener('hashchange', function() {
+      filters.setHash(window.location.hash);
+      showMap(filters);
+    });
+  }
+})();
+</script>
+</body>
+</html>
